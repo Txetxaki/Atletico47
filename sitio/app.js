@@ -81,10 +81,12 @@ function vHoy(){
  o+='<div class="row"><button class="btn sm" onclick="guardarHoy()">Guardar</button><span class="mkcal">'+(S.hoy[f]?'guardado':'sin guardar')+'</span></div></div>';
  if(a.avisos.length)o+='<div class="note w"><b>Ajustes de hoy</b>'+a.avisos.map(esc).join('<br>')+'</div>';
  else if(S.hoy[f])o+='<div class="note"><b>Sin ajustes</b>Rodillas bien, sueño suficiente, sin partido ayer. La sesión va tal cual.</div>';
- /* semana */
+ /* semana: cada día es un botón; al tocarlo se despliega qué toca ese día */
+ if(!diaSel)diaSel=dia;
  o+='<h3 class="sec">La semana</h3><div class="days">'+DIAS.map(function(k){
   var qq=queToca(k,f),lab=qq.tipo==='fuerza'?qq.k:(qq.tipo==='padel'?'pádel':'movil');
-  return '<div class="day'+(qq.tipo==='movil'?' rest':'')+'" aria-pressed="'+(k===dia)+'"><span class="d">'+DIAL[k]+'</span><span class="l">'+lab+'</span></div>'}).join('')+'</div>';
+  return '<button class="day'+(qq.tipo==='movil'?' rest':'')+(k===dia?' hoyd':'')+'" aria-pressed="'+(k===diaSel)+'" onclick="verDiaSem(\''+k+'\')"><span class="d">'+DIAL[k]+'</span><span class="l">'+lab+'</span></button>'}).join('')+'</div>';
+ o+='<div id="diaSem">'+diaSemHTML(diaSel)+'</div>';
  var cs=cargaSemana();
  o+='<div class="grid">'+stat(cs.fuerza,'fuerza esta semana')+stat(cs.partidos,'partidos')+stat(rachaMovil(),'días seguidos de movilidad')+stat(S.hist.length,'sesiones totales')+'</div>';
  /* recordatorios */
@@ -93,6 +95,34 @@ function vHoy(){
  if(fase()===1)o+='<div class="note"><b>Fase 1: tendones y técnica</b>Semanas 1 a 4 con cargas bajas a propósito y RIR 4. Vienes de dos codos y una muñeca con artrosis: el músculo se adapta en semanas, el tendón en meses.</div>';
  o+='<div class="note"><b>Siempre</b>Exhala en el esfuerzo, nunca bloquees el aire. Termina cada serie pudiendo hacer 2-3 repeticiones más. Nada por debajo de paralelo, nada de rodillas en el suelo, nada que cargue la muñeca izquierda en extensión.</div>';
  $('hoy').innerHTML=o;
+}
+var diaSel=null;
+function fechaDeDia(k){ // fecha de ese día de la semana en la semana actual (lunes a domingo)
+ var d=new Date(),off=(d.getDay()+6)%7;d.setDate(d.getDate()-off+DIAS.indexOf(k));return iso(d)}
+function verDiaSem(k){diaSel=k;
+ document.querySelectorAll('#hoy .day').forEach(function(b){b.setAttribute('aria-pressed',b.textContent.charAt(0)===DIAL[k])});
+ $('diaSem').innerHTML=diaSemHTML(k)}
+function diaSemHTML(k){
+ var f=fechaDeDia(k),q=queToca(k,f),hoy=hoyISO(),cuando=f===hoy?'hoy':(f<hoy?'pasado':'');
+ var o='<div class="hist"><h4>'+DIAN[k]+' '+fmtF(f)+(cuando?' <span class="chip">'+cuando+'</span>':'')+'</h4>';
+ if(q.tipo==='fuerza'){
+  var s=sesionDe(k,f),a=ajustesDe(f);
+  o+='<div class="hmeta" style="margin-bottom:8px"><span>'+s.n+' · '+s.s+'</span><span>'+s.ej.length+' ejercicios</span></div>';
+  if(a.avisos.length)o+='<p class="err">'+a.avisos.map(esc).join(' ')+'</p>';
+  o+='<div class="eq" style="margin:0 0 10px">'+s.ej.map(function(id,i){var L=LIB[id],sg=sugerir(id,f),n=seriesDe(id,f);
+   return '<div class="item"><span class="num">'+(i+1<10?'0':'')+(i+1)+'</span><label>'+esc(L.n)+'</label><span class="q">'+n+'×'+(L.r[0]===L.r[1]?L.r[0]:L.r[0]+'-'+L.r[1])+(L.seg?'s':'')+(sg.peso?' · '+sg.peso+' kg':'')+'</span></div>'}).join('')+'</div>';
+  var r=sesDe(f);
+  o+='<div class="row">'+(r?'<span class="mkcal">guardada'+(r.s.val?' y validada':'')+'</span>':'')+'<button class="btn gh sm" onclick="pick(\''+k+'\');vw(\'tr\')">Abrir en Entreno</button></div>';
+ } else if(q.tipo==='padel'){
+  var p=padelDe(f);
+  o+='<p class="cue" style="padding-top:0">Pádel a las 19:00. Calienta 8-10 min, agarre a 6 de 10, y al acabar apunta rodillas y codo. La sesión de fuerza del día siguiente irá con pierna ligera.</p>';
+  o+='<div class="row">'+(p>=0?'<span class="mkcal">partido registrado · codo '+S.padel[p].codo+'/10</span>':'')+'<button class="btn gh sm" onclick="vw(\'pa\')">Ir a Pádel</button></div>';
+ } else {
+  o+='<p class="cue" style="padding-top:0">Movilidad de 8 minutos: cadera, dorsal y hombro contra la silla y el coche. Bici suave de 30-45 min si te apetece; no cuenta como día de entreno.</p>';
+  o+='<div class="eq" style="margin:0 0 10px">'+MOV.map(function(m){return '<div class="item"><label>'+esc(m.n)+'</label><span class="q">'+m.seg+' s</span></div>'}).join('')+'</div>';
+  o+='<div class="row">'+(S.movil.indexOf(f)>=0?'<span class="mkcal">hecha</span>':'')+'<button class="btn gh sm" onclick="empezarMovil()">Empezar los 8 minutos</button></div>';
+ }
+ return o+'</div>';
 }
 function guardarHoy(){
  var f=hoyISO();S.hoy[f]={rod:parseInt($('hRod').value)||0,sue:num('hSue'),padel:$('hPad').checked?1:0};

@@ -1,0 +1,24 @@
+{
+  "name": "Atlético 47",
+  "short_name": "Atlético47",
+  "description": "Fuerza, pádel, cuerpo y comida, adaptado a tus articulaciones",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0E1520",
+  "theme_color": "#0E1520",
+  "lang": "es",
+  "categories": ["health", "fitness"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Hoy", "url": "./index.html", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] },
+    { "name": "Entreno", "url": "./index.html?t=tr" },
+    { "name": "Pádel", "url": "./index.html?t=pa" },
+    { "name": "Cuerpo", "url": "./index.html?t=cu" }
+  ]
+}

@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700&display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;background:#0E1520}
+.ic{width:512px;height:512px;background:#0E1520;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.ic.masc{background:#0E1520}
+.ic .b{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:300px;color:#EEF1F5;letter-spacing:-8px;line-height:1;display:flex;align-items:baseline}
+.ic .b em{font-style:normal;color:#FFB447}
+.ic .k{position:absolute;left:0;right:0;bottom:0;height:34px;background:#FFB447}
+.ic.masc .b{font-size:220px}
+</style></head>
+<body><div class="ic" id="ic"><div class="b">A<em>47</em></div><div class="k"></div></div>
+<script>var q=new URLSearchParams(location.search);if(q.get('masc'))document.getElementById('ic').className='ic masc';var s=parseInt(q.get('s'))||512;document.body.style.zoom=s/512;</script>
+</body></html>

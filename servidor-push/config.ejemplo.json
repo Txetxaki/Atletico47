@@ -1,0 +1,5 @@
+{
+  "publica": "clave-publica-VAPID-que-imprime-node-push.js---claves",
+  "privada": "clave-privada-VAPID-NUNCA-la-subas-a-git",
+  "contacto": "mailto:tu@email.com"
+}

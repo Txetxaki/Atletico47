@@ -1,0 +1,20 @@
+[Unit]
+Description=Atletico 47 - servidor estatico de la PWA y API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=txetxaki
+Group=txetxaki
+WorkingDirectory=/home/txetxaki/atletico47
+ExecStart=/usr/bin/node /home/txetxaki/atletico47/servidor-web.js
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

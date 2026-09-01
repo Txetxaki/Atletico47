@@ -1,0 +1,20 @@
+[Unit]
+Description=Atletico 47 - planificador de notificaciones push
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=txetxaki
+Group=txetxaki
+WorkingDirectory=/home/txetxaki/atletico47/servidor-push
+ExecStart=/usr/bin/node /home/txetxaki/atletico47/servidor-push/push.js
+Restart=always
+RestartSec=10
+NoNewPrivileges=true
+PrivateTmp=true
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,4 @@
+# Corre en Linux (Raspberry) aunque se edite en Windows: un CRLF tras el
+# shebang rompe bash con "bad interpreter: ^M". LF siempre.
+* text=auto eol=lf
+*.png binary

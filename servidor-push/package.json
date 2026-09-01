@@ -1,0 +1,9 @@
+{
+  "name": "atletico47-push",
+  "version": "1.0.0",
+  "private": true,
+  "main": "push.js",
+  "dependencies": {
+    "web-push": "^3.6.7"
+  }
+}

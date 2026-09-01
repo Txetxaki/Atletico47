@@ -1,0 +1,18 @@
+# Secretos: la clave de la API del Coach y la clave VAPID privada.
+coach.json
+servidor-push/config.json
+
+# Endpoints personales de cada dispositivo suscrito.
+servidor-push/suscripciones.json
+servidor-push/agenda.json
+
+# Dependencias
+node_modules/
+package-lock.json
+
+# Datos de produccion: viven solo en la Pi y se respaldan con scripts/respaldo-db.sh
+datos/
+*.db
+*.db-shm
+*.db-wal
+respaldos/

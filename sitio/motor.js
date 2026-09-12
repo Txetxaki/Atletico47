@@ -9,7 +9,8 @@
 var CLAVE='a47v1';
 var DEF={
  perfil:{nombre:"",altura:178,peso0:81},
- cfg:{creado:null,padel:['mar','jue'],fuerza:['lun','vie'],verano:false,tabaco:true},
+ cfg:{creado:null,padel:['mar','jue'],padelHora:"19:00",fuerza:['lun','vie'],verano:false,tabaco:true,
+  descanso:[120,75],kcal:2300,prot:130,sustituye:{},movOff:[],movExtra:[]},
  equipo:{barra:10,barraMan:2,kb:2,fijas:5,nFijas:2,
   discos:{"3":4,"2.5":4,"2":4,"1":4},
   tiene:{banco:1,torre:1,trx:1,banda:1,escalon:1,bici:1,paralelas:1,bosu:1,comba:1,saco:1,rodillo:1,rueda:1},custom:[]},
@@ -22,6 +23,8 @@ var DEF={
  cuerpo:[],            // registro semanal [{f,peso,cint,rodD,rodI,mun,cad,sueN,sueS,cig,sis,dia,nota}]
  hoy:{},               // disposición diaria por fecha {f:{rod,sue,padel}}
  movil:[],             // fechas con la movilidad hecha
+ comidas:[],           // diario de comida real [{f,h,t,plan}]
+ platos:[],            // mis platos [{n,t}]
  desvios:[],notas:{comida:[]},
  push:null
 };
@@ -41,6 +44,9 @@ function load(cb){
   Object.keys(DEF.cfg).forEach(function(k){if(S.cfg[k]===undefined)S.cfg[k]=clon(DEF.cfg[k])});
   Object.keys(DEF.artic).forEach(function(k){if(S.artic[k]===undefined)S.artic[k]=0});
   if(!S.semana)S.semana=1;
+  // Los desvíos de la versión anterior pasan al diario de comida como entradas fuera de plan.
+  if(!S.migr1){S.migr1=1;var CD={cambio:'Cambié un plato',picoteo:'Piqué entre horas',fuera:'Comí fuera',salte:'Me salté una comida',alcohol:'Más de una cerveza'};
+   (S.desvios||[]).forEach(function(d){S.comidas.push({f:d.f,h:'Otro',t:(CD[d.c]||d.c)+(d.t?': '+d.t:''),plan:0})});S.comidas.sort(function(a,b){return a.f<b.f?-1:1})}
   for(var k in S.ejCustom)LIB[k]=S.ejCustom[k];
   // La disposición diaria solo interesa 60 días: lo demás fuera, que el blob no engorde.
   var lim=diasAtras(60);Object.keys(S.hoy).forEach(function(f){if(f<lim)delete S.hoy[f]});
@@ -117,9 +123,19 @@ function sesionDe(dia,f){
  var q=queToca(dia,f);if(q.tipo!=='fuerza')return null;
  var t=TPL[q.k],out={n:t.n,s:t.s,k:q.k,ej:[]};
  t.slots.forEach(function(sl){var id=ejerDeSlot(sl);if(id&&LIB[id])out.ej.push(id);else out.falta=(out.falta||0)+1});
+ // Sustituciones permanentes elegidas en Entreno («usar siempre»); orig guarda el del plan
+ out.orig=out.ej.slice();
+ out.ej=out.ej.map(function(id){var x=S.cfg.sustituye&&S.cfg.sustituye[id];return (x&&LIB[x]&&disponible(x)&&out.ej.indexOf(x)<0)?x:id});
  if(!S.cfg.verano)EXTRA_PADEL.forEach(function(id){if(disponible(id))out.ej.push(id)});
  return out;
 }
+/* candidatos para sustituir un ejercicio de forma permanente: mismo patrón o su lista de alternativas */
+function mismoPat(id,enSesion){var L=LIB[id];if(!L)return [];
+ return Object.keys(LIB).filter(function(k){return k!==id&&(LIB[k].pat===L.pat||(L.alt||[]).indexOf(k)>=0)&&disponible(k)&&enSesion.indexOf(k)<0})}
+/* movilidad: los pasos por defecto menos los desactivados, más los propios */
+function rutinaMov(){var l=MOV.filter(function(m,i){return (S.cfg.movOff||[]).indexOf(i)<0});
+ return l.concat((S.cfg.movExtra||[]).map(function(m){return {n:m.n,seg:m.seg||45,c:m.c||'',propio:1}}))}
+function comidasDe(f){return S.comidas.filter(function(c){return c.f===f})}
 /* alternativa para el botón "me duele": primera de la lista alt que esté disponible y no esté ya en la sesión */
 function alternativa(id,enSesion){
  var L=LIB[id];if(!L)return null;

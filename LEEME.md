@@ -52,14 +52,15 @@ datos. Las dos apps conviven en la misma Pi sin tocarse.
 | **Progreso** | Calendario (fuerza, pádel, movilidad), volumen semanal, progresión por ejercicio, cerrar semana | Lo de siempre |
 | **Pádel** | Calentamiento guiado de 9 min, registro de partido (minutos, intensidad, rodillas y codo después, hielo), carga semanal | Es la mitad de su actividad y el origen de su última lesión |
 | **Cuerpo** | Semanal: peso, cintura, dolor por articulación, sueño de noche y siesta, tabaco opcional, tensión trimestral | Sustituye a Tensión: él no es hipertenso. Lo que decide la progresión es el dolor por articulación |
-| **Comida** | Método del plato, menú por tipo de día, tres cenas de emergencia, desvíos, lista de la compra | ~2.300 kcal y ~130 g de proteína sin contar; sin DASH ni límite de sal |
+| **Comida** | **Diario de lo que ha comido de verdad** (momento, qué, en plan o no), «mis platos» para apuntar rápido, menú de referencia por tipo de día, cenas de emergencia, lista de la compra | Lo que decide la barriga es lo que come, no lo que debería; el Coach lee el diario |
 | **Coach** | Chat con perfil, lesiones, reglas duras e historial completo | La clave vive en el servidor, no en el HTML |
-| **Ajustes** | Días de pádel y fuerza, verano, material, **articulaciones en fase mala**, ejercicios propios, push, copia de seguridad | Que el plan cambie sin tocar código |
+| **Ajustes** | Días de pádel y fuerza, hora del partido, descansos, **articulaciones en fase mala**, **sustituciones permanentes**, material (incluido el propio), **ejercicios propios** con material y alternativa, **movilidad editable**, objetivos de comida, push, copia de seguridad | Que el plan cambie sin tocar código |
 
 ## Qué decide el motor
 
 - **Qué toca:** días de fuerza y pádel desde Ajustes. Primer día de fuerza = A, segundo = B. Con un solo día, alterna por semanas. Verano quita el pádel.
-- **Disponibilidad:** un ejercicio entra si hay material, si ninguna articulación marcada «en fase mala» está en su lista `evita`, y si está desbloqueado (nivel 2 desde la semana 6, nivel 3 desde la 13 y solo sin dolor >3 en 8 semanas).
+- **Sustituciones permanentes:** desde Entreno, «usar siempre X en lugar de Y» (mismo patrón o alternativa). El motor lo aplica en cada sesión; se quitan en Ajustes.
+- **Disponibilidad:** un ejercicio entra si hay material (de la lista o propio), si ninguna articulación marcada «en fase mala» está en su lista `evita`, y si está desbloqueado (nivel 2 desde la semana 6, nivel 3 desde la 13 y solo sin dolor >3 en 8 semanas).
 - **Ajustes del día:** pádel ayer → una serie menos de pierna y carga al 90 %. Rodillas ≥4 → fuera step-up, entra extensión terminal, carga al 85 %. Menos de 5 h dormidas → una serie menos en todo. Rodillas ≥7 → aviso de no cargar pierna.
 - **Progresión:** doble progresión (reps hasta el tope, luego kilos), bloqueada en las semanas 1-4 (tendones). Descarga cada 5ª semana o adelantada si el dolor sube tres registros seguidos.
 - **Alertas:** tensión ≥180/110 (no entrena), ≥140/90 (repetir y consultar), codo ≥4 dos partidos seguidos, rodilla ≥6 tras partido, dolor en tendencia ascendente.

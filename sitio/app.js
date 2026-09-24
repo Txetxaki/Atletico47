@@ -1,4 +1,4 @@
-/* Atlético 47 — vistas y arranque
+/* IvannGym — vistas y arranque
  *
  * Cada pestaña tiene su función vXxx() que pinta a partir de S (motor.js) y de
  * la biblioteca (biblioteca.js). No hay framework: strings de HTML y onclick.
@@ -608,7 +608,7 @@ function estadoNotif(){
 function pedirNotif(){if(!('Notification' in window)){toast('Este navegador no las soporta',1);return}
  Notification.requestPermission().then(function(p){vAjustes();if(p==='granted'){toast('Notificaciones activadas');probarNotif()}else toast('Permiso denegado',1)})}
 function probarNotif(){if(Notification.permission!=='granted'){toast('Actívalas primero',1);return}
- if(swReg&&swReg.showNotification)swReg.showNotification('Atlético 47',{body:'Funcionan.',icon:'icon-192.png',vibrate:[180,90,180]});else new Notification('Atlético 47',{body:'Funcionan.'})}
+ if(swReg&&swReg.showNotification)swReg.showNotification('IvannGym',{body:'Funcionan.',icon:'icon-192.png',vibrate:[180,90,180]});else new Notification('IvannGym',{body:'Funcionan.'})}
 function suscribirPush(){
  var k=(($('vapid')||{}).value||'').trim();
  if(!k){toast('Pega primero la clave pública VAPID',1);return}

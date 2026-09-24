@@ -1,4 +1,4 @@
-/* Atlético 47 — estado, persistencia y motor de decisiones
+/* IvannGym — estado, persistencia y motor de decisiones
  *
  * Aquí no se pinta nada. Todo lo que decide qué toca hoy, qué ejercicio entra,
  * cuánto peso y cuántas series vive en este fichero, para poder leerlo de

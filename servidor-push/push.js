@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* Atlético 47 — servidor de notificaciones push
+/* IvannGym — servidor de notificaciones push
  *
  *   npm install web-push            (en esta carpeta)
  *   node push.js --claves           genera las claves VAPID (solo la primera vez)
@@ -38,7 +38,7 @@ function guardarSubs(lista) { fs.writeFileSync(SUBS, JSON.stringify(lista, null,
 async function enviar(titulo, cuerpo) {
   const lista = subs();
   if (!lista.length) { console.log('No hay suscripciones. Pega el JSON de la app en suscripciones.json (array).'); return; }
-  const carga = JSON.stringify({ title: titulo, body: cuerpo, tag: 'a47', url: './index.html' });
+  const carga = JSON.stringify({ title: titulo, body: cuerpo, tag: 'ig', url: './index.html' });
   const vivas = [];
   for (const s of lista) {
     try { await webpush.sendNotification(s, carga); vivas.push(s); console.log(new Date().toISOString(), 'enviada:', cuerpo); }
@@ -62,7 +62,7 @@ let AGENDA = {
 if (fs.existsSync(AGENDA_F)) { try { AGENDA = JSON.parse(fs.readFileSync(AGENDA_F, 'utf8')); } catch (e) { console.error('agenda.json no es válido, uso la agenda por defecto'); } }
 
 if (process.argv.includes('--probar')) {
-  enviar('Atlético 47', 'Prueba: si ves esto, funciona.').then(() => process.exit(0));
+  enviar('IvannGym', 'Prueba: si ves esto, funciona.').then(() => process.exit(0));
 } else {
   console.log('Planificador en marcha.');
   let ultimo = '';

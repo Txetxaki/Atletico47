@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-/* Atlético 47 — servidor estático de la PWA + API
+/* IvannGym — servidor estático de la PWA + API
  *
  * Sirve sitio/ en 127.0.0.1:8091 (solo loopback). Tailscale Serve pone el
- * HTTPS por delante. Mismo esquema que Atlético 44, en otro puerto: otro
+ * HTTPS por delante. Mismo esquema que la PWA hermana, en otro puerto: otro
  * origen, otro localStorage, otra base de datos. No se pisan.
  *
  *   /api/estado/*, /api/historial/*, /api/salud   -> api-estado.js (SQLite)
@@ -74,5 +74,5 @@ const servidor = http.createServer((req, res) => {
 });
 
 servidor.listen(PUERTO, HOST, () => {
-  console.log('Atlético 47 sirviendo ' + RAIZ + ' en http://' + HOST + ':' + PUERTO + (coach.configurado() ? ' · coach activo' : ' · coach sin configurar'));
+  console.log('IvannGym sirviendo ' + RAIZ + ' en http://' + HOST + ':' + PUERTO + (coach.configurado() ? ' · coach activo' : ' · coach sin configurar'));
 });

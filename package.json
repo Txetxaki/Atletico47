@@ -1,8 +1,8 @@
 {
-  "name": "atletico47",
+  "name": "ivanngym",
   "version": "1.0.0",
   "private": true,
-  "description": "PWA de fuerza, pádel, cuerpo y comida adaptada a un cuerpo con cinco operaciones",
+  "description": "IvannGym — PWA de fuerza, pádel, cuerpo y comida adaptada a un cuerpo con cinco operaciones",
   "main": "servidor-web.js",
   "scripts": {
     "start": "node servidor-web.js",

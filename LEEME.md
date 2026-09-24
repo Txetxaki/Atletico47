@@ -1,13 +1,27 @@
-# Atlético 47
+# IvannGym
 
-PWA de fuerza, pádel, cuerpo y comida para un hombre de 47 años con cinco
-operaciones, artrosis en caderas y muñeca izquierda, y quince años parado.
-Derivada de Atlético 44 en arquitectura, no en contenido: aquí no hay nada que
-no le sirva a él. El plan y el porqué de cada decisión están en el documento
-de diseño; este LEEME es la parte técnica.
+PWA de fuerza, pádel, cuerpo y comida para Ivann: cinco operaciones, artrosis
+en caderas y muñeca izquierda, y quince años parado. Antes se llamaba Atlético
+47 (nombre provisional); IvannGym es el definitivo, con estética de cabina de
+DJ. Derivada de una PWA hermana anterior en arquitectura, no en contenido:
+aquí no hay nada que no le sirva a él, y el pádel se queda porque es su
+deporte. El plan y el porqué de cada decisión están en el documento de
+diseño; este LEEME es la parte técnica.
 
-**Estado:** lista para desplegar. Falta decidir el nombre definitivo (este es
-provisional) y poner la clave del Coach.
+**Estado:** lista para desplegar. Falta poner la clave del Coach.
+
+## Diseño: cabina de DJ
+
+Fondo casi negro, acentos neón magenta/cian, motivos de mesa de mezclas
+usados con moderación: la barra de progreso de Entreno es un vúmetro con
+segmentos y resplandor, los separadores de sección (`h3.sec`) llevan una
+forma de onda muy sutil en vez de una línea recta, y la cabecera tiene una
+textura de surcos de vinilo de fondo. Tipografía: **Monoton** solo para el
+logotipo «IvannGym» del encabezado (estética de flyer de club), **Barlow
+Condensed** para el resto de titulares (ya estaba), **IBM Plex Sans/Mono**
+para cuerpo y cifras. Los nombres de las pestañas siguen en español llano.
+Respeta `prefers-reduced-motion`. El icono (`tools/icono.html`) es un vinilo
+con el mono­grama «IG» en el label y un brazo de plato en cian.
 
 ---
 
@@ -23,8 +37,14 @@ Tailscale Serve (HTTPS :10047, o el puerto que elijas)
 servidor-push/push.js (proceso aparte) ──> web-push ──> notificaciones al móvil
 ```
 
-Otro puerto que Atlético 44 = otro origen = otro `localStorage` y otra base de
-datos. Las dos apps conviven en la misma Pi sin tocarse.
+Otro puerto que la PWA hermana = otro origen = otro `localStorage` y otra
+base de datos. Las dos apps conviven en la misma Pi sin tocarse.
+
+La clave de `localStorage` (`a47v1`), el fichero `datos/atletico47.db`, las
+rutas `/api/*` y el puerto 8091 se mantienen tal cual desde la versión
+anterior: son identificadores de datos, y cambiarlos le haría perder el
+historial. Lo único que cambia de nombre son las cosas visibles (título,
+iconos, unidades systemd) y el paquete npm.
 
 | Ruta | Qué es |
 |---|---|
@@ -67,7 +87,7 @@ datos. Las dos apps conviven en la misma Pi sin tocarse.
 
 ## Datos
 
-Doble capa, igual que Atlético 44: `localStorage` (clave `a47v1`, síncrono,
+Doble capa, igual que la PWA hermana: `localStorage` (clave `a47v1`, síncrono,
 siempre primero) y SQLite en la Pi como sincronización. Gana el último por
 marca de tiempo; cada escritura deja instantánea en `historial`.
 
@@ -75,7 +95,7 @@ marca de tiempo; cada escritura deja instantánea en `historial`.
 
 ```bash
 # 1. Código
-git clone <repo> ~/atletico47          # o mueve esta carpeta a su propio repo
+git clone <repo> ~/atletico47          # el directorio se llama asi por continuidad, ver nota abajo
 cd ~/atletico47
 npm install --omit=dev                 # solo @anthropic-ai/sdk, para el Coach
 
@@ -83,21 +103,30 @@ npm install --omit=dev                 # solo @anthropic-ai/sdk, para el Coach
 cp coach.ejemplo.json coach.json && nano coach.json
 
 # 3. Servicios
-sudo cp systemd/atletico47-*.service /etc/systemd/system/
+sudo cp systemd/ivanngym-*.service /etc/systemd/system/
 sudo systemctl daemon-reload
-sudo systemctl enable --now atletico47-web.service
+sudo systemctl enable --now ivanngym-web.service
 curl http://127.0.0.1:8091/api/salud
 
-# 4. Tailscale Serve, en otro puerto que Atlético 44
+# 4. Tailscale Serve, en otro puerto que la PWA hermana
 sudo tailscale serve --bg --https=10047 http://127.0.0.1:8091
 
 # 5. Push (opcional)
 cd servidor-push && npm install && node push.js --claves
 # pega la clave pública en Ajustes → Suscribir → Copiar suscripción → suscripciones.json (array)
-sudo systemctl enable --now atletico47-push.service
+sudo systemctl enable --now ivanngym-push.service
 ```
 
 Si el Coach no está configurado, la pestaña lo dice y todo lo demás funciona.
+
+**Nota sobre el directorio `~/atletico47`:** es el checkout de git ya
+desplegado en la Pi, y `scripts/desplegar.sh` da por hecho esa ruta. Se
+mantiene con ese nombre a propósito, para no tener que mover nada en
+producción; el nombre de la app en todas partes visibles (título, iconos,
+unidades systemd, notificaciones) ya es IvannGym. Si algún día se renombra
+también el directorio, hay que actualizar `BASE=` en `scripts/desplegar.sh`
+y `scripts/respaldo-db.sh`, y las rutas `WorkingDirectory=`/`ExecStart=` de
+los dos `.service`.
 
 ## Trabajar en la app
 
@@ -110,7 +139,7 @@ node servidor-web.js       # http://127.0.0.1:8091
 **Antes de commitear cualquier cambio dentro de `sitio/`:**
 
 ```bash
-./scripts/version-sw.sh    # sube a47-vN -> a47-v(N+1)
+./scripts/version-sw.sh    # sube ig-vN -> ig-v(N+1)
 ```
 
 Iconos: `tools/icono.html` renderizado con Chromium headless a 512, 192 y 180 px
@@ -123,9 +152,16 @@ ssh txetxaki@raspberry.taile8249e.ts.net '~/atletico47/scripts/desplegar.sh'
 ~/atletico47/scripts/respaldo-db.sh      # cron diario recomendado, ver el script
 ```
 
+## GitHub Pages
+
+`.github/workflows/pages.yml` publica `sitio/` en Pages en cada push a `main`
+o `ivanngym`. Es solo la PWA estática: sin servidor, sin API, sin Coach, sin
+push. `storage-remote.js` intenta hablar con `/api` y, si no existe (como en
+Pages), cae en silencio a `localStorage` sin avisos molestos; la app funciona
+igual, solo que sin sincronizar entre dispositivos.
+
 ## Lo que falta
 
-- [ ] Nombre definitivo y repo propio (esta carpeta es autocontenida: se mueve tal cual)
 - [ ] `coach.json` con la clave
 - [ ] Puerto de Tailscale Serve
 - [ ] Claves VAPID y `suscripciones.json`

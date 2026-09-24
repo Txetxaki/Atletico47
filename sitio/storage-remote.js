@@ -1,4 +1,4 @@
-/* Atlético 47 — puente de almacenamiento contra el servidor de la Raspberry
+/* IvannGym — puente de almacenamiento contra el servidor de la Raspberry
  *
  * La app comprueba en save()/load() si existe window.storage y, si está, lo usa
  * en lugar de localStorage. Este archivo define ese window.storage.

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Atletico 47 - respaldo de la base de datos
+# IvannGym - respaldo de la base de datos
 #
 #   ~/atletico47/scripts/respaldo-db.sh
 #

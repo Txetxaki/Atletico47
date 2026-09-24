@@ -3,31 +3,31 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0E1520">
-<title>Atlético 47</title>
+<meta name="theme-color" content="#0B0712">
+<title>IvannGym</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Atlético 47">
+<meta name="apple-mobile-web-app-title" content="IvannGym">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Monoton&family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-:root{--ink:#0E1520;--paper:#EEF1F5;--dim:#8391A3;--line:#243040;--acc:#FFB447;--acc-dk:#C98A2B;--warn:#FF8A3D;--red:#E5484D;--ok:#4BC27A;--card:#17202C}
+:root{--ink:#0B0712;--paper:#F3EEFB;--dim:#9C94BC;--line:#241B3A;--acc:#FF2FD4;--acc-dk:#E85DB0;--warn:#FF7A45;--red:#FF3B5C;--ok:#22E7FF;--card:#150F24}
 html{-webkit-text-size-adjust:100%}
-body{background:var(--ink);color:var(--paper);font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:clamp(15px,4vw,16px);line-height:1.55;padding-bottom:calc(90px + env(safe-area-inset-bottom))}
+body{background:var(--ink);color:var(--paper);font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:clamp(15px,4vw,16px);line-height:1.55;padding-bottom:calc(90px + env(safe-area-inset-bottom));overflow-x:hidden}
 .wrap{max-width:900px;margin:0 auto;padding:0 16px}
 h1,h2,h3{font-family:"Barlow Condensed","Arial Narrow",sans-serif;text-transform:uppercase;letter-spacing:.01em;line-height:.95}
 button{font-family:inherit;font-size:inherit;cursor:pointer;border:none;background:none;color:inherit}
 button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 input,select{font-family:inherit}
-header{border-bottom:1px solid var(--line);padding:18px 0 0;margin-bottom:20px}
-.brand{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:14px}
-.brand h1{font-size:clamp(26px,7vw,38px);font-weight:700}
-.brand h1 em{font-style:normal;color:var(--acc)}
+header{border-bottom:1px solid var(--line);padding:18px 0 0;margin-bottom:20px;position:relative;overflow:hidden;background-image:repeating-radial-gradient(circle at 100% -20%,rgba(255,47,212,.09) 0,rgba(255,47,212,.09) 1px,transparent 1px,transparent 10px)}
+.brand{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:14px;position:relative}
+.brand h1{font-family:"Monoton","Barlow Condensed",sans-serif;font-weight:400;text-transform:none;font-size:clamp(20px,6vw,30px);letter-spacing:.02em;text-shadow:0 0 12px rgba(255,47,212,.55),0 0 26px rgba(34,231,255,.25)}
+.brand h1 em{font-style:normal;color:var(--ok)}
 .tag,.mkcal,.when,.num,.slab,.hmeta,.chip,.kgb,.discos,.serie label,.row label,.stat .k,.eqi .u,.item .q,.day .l,.cd,.calh span,.load,footer{font-family:"IBM Plex Mono",ui-monospace,monospace}
 .tag{font-size:10px;color:var(--dim);letter-spacing:.12em;text-transform:uppercase}
 .tabs{display:flex;gap:16px;overflow-x:auto;scrollbar-width:none}
@@ -48,8 +48,8 @@ header{border-bottom:1px solid var(--line);padding:18px 0 0;margin-bottom:20px}
 .day.hoyd{outline:2px solid var(--acc);outline-offset:1px}
 .day.hoyd[aria-pressed=true]{outline-color:var(--paper)}
 .day[aria-pressed=true].rest .d{color:var(--ink)}
-.bar{height:3px;background:var(--line);border-radius:2px;overflow:hidden;margin-bottom:20px}
-.bar i{display:block;height:100%;background:var(--acc);width:0;transition:width .35s}
+.bar{height:8px;background:var(--line);border-radius:2px;overflow:hidden;margin-bottom:20px;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,.35) 0 2px,transparent 2px 8px)}
+.bar i{display:block;height:100%;width:0;transition:width .35s;background-image:linear-gradient(90deg,var(--ok),var(--acc));background-size:200px 100%;box-shadow:0 0 8px rgba(255,47,212,.6)}
 .ex{border:1px solid var(--line);border-radius:13px;margin-bottom:11px;background:var(--card);overflow:hidden}
 .exhd{display:flex;align-items:center;gap:11px;padding:15px 16px;width:100%;text-align:left}
 .num{font-size:10.5px;color:var(--dim);min-width:18px}
@@ -82,7 +82,7 @@ header{border-bottom:1px solid var(--line);padding:18px 0 0;margin-bottom:20px}
 .rest-btn:hover{border-color:var(--acc)}
 .row{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
 .row label{font-size:9.5px;color:var(--dim);letter-spacing:.09em;text-transform:uppercase}
-.inp{background:var(--ink);border:1px solid var(--line);border-radius:9px;padding:10px 11px;color:var(--paper);font-family:"IBM Plex Mono",monospace;font-size:14px}
+.inp{background:var(--ink);border:1px solid var(--line);border-radius:9px;padding:10px 11px;color:var(--paper);font-family:"IBM Plex Mono",monospace;font-size:14px;max-width:100%;min-width:0}
 .inp:focus{outline:none;border-color:var(--acc)}
 input.nota{background:var(--ink);border:1px solid var(--line);border-radius:9px;padding:10px 11px;color:var(--paper);font-size:13.5px;width:100%;font-family:"IBM Plex Sans",sans-serif}
 input.nota:focus{outline:none;border-color:var(--acc)}
@@ -100,7 +100,7 @@ input.nota:focus{outline:none;border-color:var(--acc)}
 .note.r b{color:var(--red)}
 .rest-day{text-align:center;padding:40px 18px;color:var(--dim)}
 .rest-day p{max-width:46ch;margin:9px auto 0;font-size:14px}
-h3.sec{font-size:16px;color:var(--paper);margin:26px 0 12px;padding-bottom:7px;border-bottom:1px solid var(--line);font-weight:700}
+h3.sec{font-size:16px;color:var(--paper);margin:26px 0 12px;padding-bottom:9px;font-weight:700;background:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="8" viewBox="0 0 120 8" preserveAspectRatio="none"><path d="M0 4 L6 4 L9 1 L13 7 L17 2 L21 6 L25 4 L33 4 L36 1 L40 7 L44 2 L48 6 L52 4 L60 4 L63 1 L67 7 L71 2 L75 6 L79 4 L87 4 L90 1 L94 7 L98 2 L102 6 L106 4 L120 4" fill="none" stroke="%23241B3A" stroke-width="1.4"/></svg>') repeat-x left bottom/70px 8px}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:9px;margin-bottom:18px}
 .stat{background:var(--card);border-radius:11px;padding:13px 14px}
 .stat .v{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:26px;color:var(--acc);line-height:1}
@@ -169,7 +169,7 @@ footer{border-top:1px solid var(--line);margin-top:30px;padding:16px 0 24px;font
 <body>
 <div class="wrap">
 <header>
-<div class="brand"><h1>Atlético<em>47</em></h1><span class="tag" id="today"></span></div>
+<div class="brand"><h1>Ivann<em>Gym</em></h1><span class="tag" id="today"></span></div>
 <nav class="tabs" role="tablist">
 <button class="tab" role="tab" data-t="hoy" aria-selected="true" onclick="vw('hoy')">Hoy</button>
 <button class="tab" role="tab" data-t="tr" aria-selected="false" onclick="vw('tr')">Entreno</button>

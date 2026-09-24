@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Atletico 47 - subir la version de cache del service worker
+# IvannGym - subir la version de cache del service worker
 #
 #   ./scripts/version-sw.sh
 #

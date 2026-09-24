@@ -1,4 +1,4 @@
-/* Atlético 47 — almacén de estado en SQLite
+/* IvannGym — almacén de estado en SQLite
  *
  * La app guarda todo su estado en un único blob JSON bajo la clave 'a47v1'.
  * Aquí vive la copia buena, compartida por todos los dispositivos. Cada

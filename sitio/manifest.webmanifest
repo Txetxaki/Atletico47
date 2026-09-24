@@ -1,13 +1,13 @@
 {
-  "name": "Atlético 47",
-  "short_name": "Atlético47",
+  "name": "IvannGym",
+  "short_name": "IvannGym",
   "description": "Fuerza, pádel, cuerpo y comida, adaptado a tus articulaciones",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0E1520",
-  "theme_color": "#0E1520",
+  "background_color": "#0B0712",
+  "theme_color": "#0B0712",
   "lang": "es",
   "categories": ["health", "fitness"],
   "icons": [

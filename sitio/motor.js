@@ -26,6 +26,7 @@ var DEF={
  comidas:[],           // diario de comida real [{f,h,t,plan}]
  platos:[],            // mis platos [{n,t}]
  desvios:[],notas:{comida:[]},
+ regen:{},           // regeneraciones de hoy {fecha:{indiceDeHueco:idEjercicio}}, se limpia al cambiar de día
  push:null
 };
 var S=null,_ready=false;
@@ -50,6 +51,8 @@ function load(cb){
   for(var k in S.ejCustom)LIB[k]=S.ejCustom[k];
   // La disposición diaria solo interesa 60 días: lo demás fuera, que el blob no engorde.
   var lim=diasAtras(60);Object.keys(S.hoy).forEach(function(f){if(f<lim)delete S.hoy[f]});
+  // Las regeneraciones son de hoy: al cambiar de día se olvidan.
+  if(!S.regen)S.regen={};var hoyR=hoyISO();Object.keys(S.regen).forEach(function(f){if(f!==hoyR)delete S.regen[f]});
   _ready=true;cb();
  }
  try{
@@ -132,6 +135,35 @@ function sesionDe(dia,f){
 /* candidatos para sustituir un ejercicio de forma permanente: mismo patrón o su lista de alternativas */
 function mismoPat(id,enSesion){var L=LIB[id];if(!L)return [];
  return Object.keys(LIB).filter(function(k){return k!==id&&(LIB[k].pat===L.pat||(L.alt||[]).indexOf(k)>=0)&&disponible(k)&&enSesion.indexOf(k)<0})}
+/* ============ MÚSCULOS Y REGENERAR ============ */
+/* grupos musculares de un ejercicio: los suyos propios, o por defecto los de su patrón
+   (para ejercicios propios antiguos guardados antes de tener 'musculos'). */
+function musculosDe(id){var L=LIB[id];if(!L)return [];
+ if(L.musculos&&L.musculos.length)return L.musculos;
+ return MUSC_POR_PAT[L.pat]||[];}
+/* unión de grupos musculares (primario y secundarios) de una lista de ejercicios, en orden de aparición */
+function musculosUnion(ids){var visto={},out=[];
+ (ids||[]).forEach(function(id){musculosDe(id).forEach(function(m){if(!visto[m]){visto[m]=1;out.push(m)}})});
+ return out;}
+function musculosSesionTxt(ids){return musculosUnion(ids).map(function(m){return MUSC[m]||m}).join(', ')}
+/* aplica las regeneraciones de hoy guardadas en S.regen sobre los huecos de la sesión del plan;
+   no toca sustituciones permanentes (ya están aplicadas en s.ej) ni el "me duele" (vive en el borrador de la vista). */
+function idsConRegen(s,f){var reg=(S.regen&&S.regen[f])||{};
+ return s.ej.map(function(id,i){return (reg[i]!==undefined&&LIB[reg[i]]&&disponible(reg[i]))?reg[i]:id});}
+/* candidatos para "regenerar": mismo patrón o mismo músculo primario, disponible con las reglas de siempre
+   (material, articulaciones en fase mala, nivel desbloqueado), fuera de los huecos ya ocupados hoy en la sesión
+   y sin los que hoy toca evitar por dolor (ajuste diario). Orden estable para poder ciclar. */
+function candidatosRegen(id,enSesion,f){var L=LIB[id];if(!L)return [];
+ var pri=musculosDe(id)[0];
+ var swap=(ajustesDe(f||hoyISO()).swap)||{};
+ return Object.keys(LIB).filter(function(k){
+  if(k===id)return false;
+  if((enSesion||[]).indexOf(k)>=0)return false;
+  if(!disponible(k))return false;
+  if(swap[k])return false;
+  var M=LIB[k];
+  return M.pat===L.pat||(pri&&musculosDe(k)[0]===pri);
+ }).sort();}
 /* movilidad: los pasos por defecto menos los desactivados, más los propios */
 function rutinaMov(){var l=MOV.filter(function(m,i){return (S.cfg.movOff||[]).indexOf(i)<0});
  return l.concat((S.cfg.movExtra||[]).map(function(m){return {n:m.n,seg:m.seg||45,c:m.c||'',propio:1}}))}

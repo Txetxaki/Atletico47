@@ -72,6 +72,8 @@ header{border-bottom:1px solid var(--line);padding:18px 0 0;margin-bottom:20px;p
 .vid:hover{border-color:var(--acc);color:var(--acc)}
 .vid i{color:var(--red);font-size:10px;font-style:normal}
 .vid.duele{border-color:var(--warn);color:var(--warn)}
+.vid.regen{border-color:var(--ok);color:var(--ok)}
+.mchip{font-size:9px;border-color:var(--line);color:var(--dim);margin:4px 4px 0 0;padding:2px 6px;display:inline-block}
 .slab{font-size:9.5px;color:var(--dim);letter-spacing:.1em;text-transform:uppercase;width:100%;margin:6px 0 2px}
 .sets{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
 .serie{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:9px;padding:6px 8px}
@@ -187,6 +189,7 @@ footer{border-top:1px solid var(--line);margin-top:30px;padding:16px 0 24px;font
 <nav class="days" id="days" aria-label="Días"></nav>
 <div class="hd"><h2 id="tt"></h2><span class="when" id="when"></span></div>
 <p class="sub" id="ss"></p>
+<div class="row" id="regenRow" hidden><button class="btn gh sm" onclick="regenerarDia()">↻ Regenerar día</button></div>
 <div class="bar"><i id="prog"></i></div>
 <div id="main"></div>
 </section>

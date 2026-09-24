@@ -68,7 +68,7 @@ function vHoy(){
  o+=avisosHTML();
  /* qué toca */
  var tit,sub,boton;
- if(q.tipo==='fuerza'){var s=sesionDe(dia,f);tit=s.n;sub=s.s+' · '+s.ej.length+' ejercicios · 35-40 min';boton='<button class="btn" onclick="vw(\'tr\')">Empezar el entreno</button>'}
+ if(q.tipo==='fuerza'){var s=sesionDe(dia,f),idsHoy=idsConRegen(s,f);tit=s.n;sub=s.s+' · '+s.ej.length+' ejercicios · 35-40 min<br><span style="color:var(--acc)">Hoy tocan: '+esc(musculosSesionTxt(idsHoy))+'</span>';boton='<button class="btn" onclick="vw(\'tr\')">Empezar el entreno</button>'}
  else if(q.tipo==='padel'){tit='Pádel';sub='Calienta 8-10 min antes. Agarre a 6 de 10. Después, apunta cómo quedan rodillas y codo.';boton='<button class="btn" onclick="vw(\'pa\')">Calentamiento y registro</button>'}
  else{tit='Movilidad';sub='8 minutos contra la silla y el coche. Bici suave opcional si te apetece.';boton='<button class="btn" onclick="empezarMovil()">Empezar los 8 minutos</button>'}
  o+='<div class="hd"><h2>'+tit+'</h2><span class="when">Semana '+S.semana+(esDeload()?' · DESCARGA':'')+' · fase '+fase()+'</span></div><p class="sub">'+sub+'</p>';
@@ -107,10 +107,11 @@ function diaSemHTML(k){
  var f=fechaDeDia(k),q=queToca(k,f),hoy=hoyISO(),cuando=f===hoy?'hoy':(f<hoy?'pasado':'');
  var o='<div class="hist"><h4>'+DIAN[k]+' '+fmtF(f)+(cuando?' <span class="chip">'+cuando+'</span>':'')+'</h4>';
  if(q.tipo==='fuerza'){
-  var s=sesionDe(k,f),a=ajustesDe(f);
+  var s=sesionDe(k,f),a=ajustesDe(f),idsD=idsConRegen(s,f);
   o+='<div class="hmeta" style="margin-bottom:8px"><span>'+s.n+' · '+s.s+'</span><span>'+s.ej.length+' ejercicios</span></div>';
+  o+='<p class="cue" style="padding-top:0;color:var(--acc)">Hoy tocan: '+esc(musculosSesionTxt(idsD))+'</p>';
   if(a.avisos.length)o+='<p class="err">'+a.avisos.map(esc).join(' ')+'</p>';
-  o+='<div class="eq" style="margin:0 0 10px">'+s.ej.map(function(id,i){var L=LIB[id],sg=sugerir(id,f),n=seriesDe(id,f);
+  o+='<div class="eq" style="margin:0 0 10px">'+idsD.map(function(id,i){var L=LIB[id],sg=sugerir(id,f),n=seriesDe(id,f);
    return '<div class="item"><span class="num">'+(i+1<10?'0':'')+(i+1)+'</span><label>'+esc(L.n)+'</label><span class="q">'+n+'×'+(L.r[0]===L.r[1]?L.r[0]:L.r[0]+'-'+L.r[1])+(L.seg?'s':'')+(sg.peso?' · '+sg.peso+' kg':'')+'</span></div>'}).join('')+'</div>';
   var r=sesDe(f);
   o+='<div class="row">'+(r?'<span class="mkcal">guardada'+(r.s.val?' y validada':'')+'</span>':'')+'<button class="btn gh sm" onclick="pick(\''+k+'\');vw(\'tr\')">Abrir en Entreno</button></div>';
@@ -136,13 +137,46 @@ function empezarMovil(){
 /* ============ ENTRENO ============ */
 var cur=diaSemana(hoyISO()),borrador={},fechaSes=null;
 function pick(k){cur=k;borrador={};vTr();window.scrollTo({top:0,behavior:'smooth'})}
-function ejerciciosHoy(s){ // aplica swaps de disposición y de "me duele"
- var f=fechaSes||hoyISO(),a=ajustesDe(f);
- return s.ej.map(function(id,i){
+function ejerciciosHoy(s){ // aplica regeneraciones, swaps de disposición y "me duele"
+ var f=fechaSes||hoyISO(),a=ajustesDe(f),base=idsConRegen(s,f);
+ return base.map(function(id,i){
   var b=borrador[cur+i];
   if(b&&b.cambio)return b.cambio.por;
-  if(a.swap[id]&&disponible(a.swap[id])&&s.ej.indexOf(a.swap[id])<0)return a.swap[id];
+  if(a.swap[id]&&disponible(a.swap[id])&&base.indexOf(a.swap[id])<0)return a.swap[id];
   return id;});
+}
+function musculosHTML(id){return musculosDe(id).map(function(m){return '<span class="chip mchip">'+esc(MUSC[m]||m)+'</span>'}).join('')}
+/* "Regenerar": cambia un ejercicio de hoy por otro disponible del mismo patrón o músculo primario.
+   Cicla entre los candidatos sin repetir hasta agotarlos; descarta lo apuntado en ese hueco. */
+function regenerar(i){
+ var f=fechaSes||hoyISO(),s=sesionDe(cur,f);if(!s)return;
+ var baseId=s.ej[i],ids=ejerciciosHoy(s),otros=ids.filter(function(x,j){return j!==i});
+ var cand=candidatosRegen(baseId,otros,f);
+ if(!cand.length){toast('No hay otra opción para este músculo con tu material',1);return}
+ S.regen=S.regen||{};S.regen[f]=S.regen[f]||{};
+ var actual=S.regen[f][i],idx=actual?cand.indexOf(actual):-1,next=cand[(idx+1+cand.length)%cand.length];
+ S.regen[f][i]=next;delete borrador[cur+i];save();
+ toast('Cambiado a '+LIB[next].n+'. Trabaja '+musculosSesionTxt([next])+'.');
+ vTr();setTimeout(function(){op(i)},50);
+}
+/* "Regenerar día": lo mismo pero para todos los huecos de la sesión, manteniendo la cobertura muscular. */
+function regenerarDia(){
+ var f=fechaSes||hoyISO(),s=sesionDe(cur,f);if(!s)return;
+ var haceLog=Object.keys(borrador).some(function(k){var b=borrador[k];return b&&((b.reps&&b.reps.some(function(r){return r>0}))||b.peso!==undefined||b.rpe)});
+ var ir=function(){
+  var nuevos=s.ej.slice(),sinAlt=[];
+  s.ej.forEach(function(baseId,i){
+   var otros=nuevos.filter(function(x,j){return j!==i});
+   var cand=candidatosRegen(baseId,otros,f);
+   if(cand.length)nuevos[i]=cand[0];else sinAlt.push(LIB[baseId]?LIB[baseId].n:baseId);
+  });
+  S.regen=S.regen||{};S.regen[f]={};
+  nuevos.forEach(function(id,i){if(id!==s.ej[i])S.regen[f][i]=id});
+  borrador={};save();
+  toast(sinAlt.length?'Día regenerado. Sin alternativa para: '+sinAlt.join(', '):'Día regenerado. Hoy tocan: '+musculosSesionTxt(idsConRegen(s,f)));
+  vTr();
+ };
+ if(haceLog)pregunta('Ya has apuntado algo en la sesión de hoy. ¿Regenerar el día y perder lo apuntado?',ir);else ir();
 }
 function vTr(){
  var f=fechaSes||hoyISO();
@@ -152,10 +186,12 @@ function vTr(){
  $('when').textContent='Semana '+S.semana+(esDeload()?' · DESCARGA':'');
  if(!s){
   $('tt').textContent=q.tipo==='padel'?'Pádel':'Movilidad';$('ss').textContent='';
+  if($('regenRow'))$('regenRow').hidden=true;
   m.innerHTML='<div class="rest-day"><h3 style="font-size:19px;color:var(--dim)">Hoy no toca hierro</h3><p>'+(q.tipo==='padel'?'Calentamiento y registro del partido en la pestaña Pádel.':'8 minutos de movilidad desde Hoy. Bici suave si te apetece.')+'</p></div>';
   $('prog').style.width='0';return;}
- $('tt').textContent=s.n;$('ss').textContent=s.s;
  var a=ajustesDe(f),ids=ejerciciosHoy(s),html='';
+ $('tt').textContent=s.n;$('ss').innerHTML=esc(s.s)+'<br><span style="color:var(--acc)">Hoy tocan: '+esc(musculosSesionTxt(ids))+'</span>';
+ if($('regenRow'))$('regenRow').hidden=false;
  if(s.falta)html+=nota('<b>Faltan '+s.falta+' ejercicios</b>Con el material y las articulaciones marcadas en Ajustes no hay alternativa para algún patrón.','w');
  if(esDeload())html+=nota('<b>Semana de descarga</b>85% del peso y una serie menos. No es opcional.','w');
  if(a.avisos.length)html+=nota('<b>Ajustes de hoy</b>'+a.avisos.map(esc).join('<br>'),'w');
@@ -164,10 +200,11 @@ function vTr(){
   var L=LIB[id],sg=sugerir(id,f),b=borrador[cur+i]||{},nS=seriesDe(id,f),sets='';
   for(var j=0;j<nS;j++){var v=(b.reps&&b.reps[j])||'';
    sets+='<div class="serie'+(v?' ok':'')+'"><label>S'+(j+1)+'</label><input type="text" inputmode="numeric" placeholder="'+(L.seg?'seg':'reps')+'" value="'+v+'" oninput="setRep(\''+cur+i+'\','+j+',this.value)"></div>';}
-  var cambiado=b.cambio?'<span class="chip" style="color:var(--warn);border-color:var(--warn)">cambiado</span>':(id!==s.ej[i]?'<span class="chip">ajustado</span>':'');
+  var regHoy=(S.regen&&S.regen[f])||{};
+  var cambiado=b.cambio?'<span class="chip" style="color:var(--warn);border-color:var(--warn)">cambiado</span>':(regHoy[i]!==undefined?'<span class="chip" style="color:var(--ok);border-color:var(--ok)">regenerado</span>':(id!==s.ej[i]?'<span class="chip">ajustado</span>':''));
   var alt=alternativa(id,ids);
   return '<article class="ex" id="e'+i+'">'
-  +'<button class="exhd" onclick="op('+i+')" aria-expanded="false"><span class="num">'+(i+1<10?'0':'')+(i+1)+'</span><span class="name">'+esc(L.n)+cambiado+'</span>'
+  +'<button class="exhd" onclick="op('+i+')" aria-expanded="false"><span class="num">'+(i+1<10?'0':'')+(i+1)+'</span><span class="name">'+esc(L.n)+cambiado+'<br>'+musculosHTML(id)+'</span>'
   +'<span class="kgb"><b>'+(sg.peso?sg.peso+' kg':'sin peso')+'</b><span>'+nS+'×'+(L.r[0]===L.r[1]?L.r[0]:L.r[0]+'-'+L.r[1])+(L.seg?'s':'')+'</span></span><span class="chev">▶</span></button>'
   +'<div class="body">'
   +'<div class="why"><b>Por qué este peso:</b> '+esc(sg.txt)+'</div>'
@@ -177,6 +214,7 @@ function vTr(){
   +(L.e?'<p class="err">'+esc(L.e)+'</p>':'')
   +'<div class="vids"><a class="vid" target="_blank" rel="noopener" href="https://www.youtube.com/results?search_query='+encodeURIComponent(L.q)+'"><i>▶</i>Ver técnica</a>'
   +(alt?'<button class="vid duele" onclick="meDuele('+i+')">Me duele → '+esc(LIB[alt].n)+'</button>':'')
+  +'<button class="vid regen" onclick="regenerar('+i+')">↻ Regenerar</button>'
   +(b.cambio?'<button class="vid" onclick="deshacerCambio('+i+')">Volver a '+esc(LIB[b.cambio.de].n)+'</button>':'')+'</div>'
   +sustituirHTML(s.orig&&s.orig[i]||s.ej[i],ids)
   +'<div class="slab">Lo que has hecho hoy</div><div class="sets">'+sets
@@ -465,7 +503,7 @@ function contexto(){
  t.push('PROGRAMA: semana '+S.semana+', fase '+fase()+(esDeload()?' (DESCARGA)':'')+'. Fuerza '+S.cfg.fuerza.map(function(k){return DIAN[k]}).join(' y ')+' (A y B, cuerpo entero, 35-40 min). Pádel '+(S.cfg.verano?'parado por verano':S.cfg.padel.map(function(k){return DIAN[k]}).join(' y ')+' a las '+S.cfg.padelHora)+'. Movilidad diaria de 8 min. '+(mal.length?'Articulaciones marcadas en fase mala: '+mal.join(', ')+'.':''));
  if(S.hist.length){
   t.push('HISTORIAL DE FUERZA ('+S.hist.length+' sesiones, últimas 20):');
-  S.hist.slice(-20).forEach(function(x){t.push(x.f+' ['+x.s+', sem '+x.sem+(x.val?', validada':'')+(x.listo?', rodillas '+x.listo.rod+'/10':'')+']: '+x.ej.map(function(q){var L=LIB[q.id];return (L?L.n:q.id)+' '+(q.peso||0)+'kg '+q.reps.join('-')+' RPE'+q.rpe+(q.auto?' [asumido]':'')+(q.cambio?' [cambiado por dolor desde '+(LIB[q.cambio.de]||{}).n+']':'')+(q.nota?' ("'+q.nota+'")':'')}).join(' | '))});
+  S.hist.slice(-20).forEach(function(x){t.push(x.f+' ['+x.s+', sem '+x.sem+(x.val?', validada':'')+(x.listo?', rodillas '+x.listo.rod+'/10':'')+']: '+x.ej.map(function(q){var L=LIB[q.id],m=musculosDe(q.id)[0];return (L?L.n:q.id)+(m?' ('+(MUSC[m]||m)+')':'')+' '+(q.peso||0)+'kg '+q.reps.join('-')+' RPE'+q.rpe+(q.auto?' [asumido]':'')+(q.cambio?' [cambiado por dolor desde '+(LIB[q.cambio.de]||{}).n+']':'')+(q.nota?' ("'+q.nota+'")':'')}).join(' | '))});
  } else t.push('HISTORIAL DE FUERZA: todavía no hay sesiones guardadas.');
  if(S.padel.length)t.push('PÁDEL (últimos 10): '+S.padel.slice(-10).map(function(p){return p.f+' '+p.min+'min int'+p.int+' rodillas '+p.rodD+'/'+p.rodI+' codo '+p.codo+(p.hielo?' hielo':'')+(p.nota?' ("'+p.nota+'")':'')}).join(' | '));
  if(S.cuerpo.length)t.push('CUERPO (registro semanal, últimos 10): '+S.cuerpo.slice(-10).map(function(c){return c.f+': peso '+(c.peso||'?')+', cintura '+(c.cint||'?')+', dolor RD'+c.rodD+' RI'+c.rodI+' muñ'+c.mun+' cad'+c.cad+', sueño '+(c.sueN||'?')+'+'+(c.sueS||0)+'h'+(c.cig!=null?', '+c.cig+' cig':'')+(c.sis?', TA '+c.sis+'/'+c.dia:'')}).join(' | '));
@@ -534,14 +572,17 @@ function vAjustes(){
  /* ejercicios propios */
  o+='<h3 class="sec">Ejercicios propios</h3>';
  var ncus=Object.keys(S.ejCustom);
- if(ncus.length)o+='<div class="eq">'+ncus.map(function(k){var x=S.ejCustom[k];return '<div class="eqi"><label>'+esc(x.n)+' <span class="u">'+PATN[x.pat]+(x.req&&x.req.length?' · '+esc(nomMaterial(x.req[0])):'')+(x.alt&&x.alt.length?' · me duele → '+esc((LIB[x.alt[0]]||{}).n||''):'')+'</span></label><button class="btn gh sm" onclick="delEjer(\''+k+'\')">Quitar</button></div>'}).join('')+'</div>';
+ if(ncus.length)o+='<div class="eq">'+ncus.map(function(k){var x=S.ejCustom[k];return '<div class="eqi"><label>'+esc(x.n)+' <span class="u">'+PATN[x.pat]+(x.req&&x.req.length?' · '+esc(nomMaterial(x.req[0])):'')+(x.alt&&x.alt.length?' · me duele → '+esc((LIB[x.alt[0]]||{}).n||''):'')+'</span><br>'+musculosHTML(k)+'</label><button class="btn gh sm" onclick="delEjer(\''+k+'\')">Quitar</button></div>'}).join('')+'</div>';
  o+='<div class="eq" style="padding:14px 16px"><div class="row"><input class="nota" id="exN" placeholder="Nombre del ejercicio"></div>'
  +'<div class="row"><label>Patrón</label><select class="inp" id="exP">'+Object.keys(PATN).map(function(k){return '<option value="'+k+'">'+PATN[k]+'</option>'}).join('')+'</select>'
  +'<label>Tipo</label><select class="inp" id="exT"><option value="corporal">Peso corporal</option><option value="mancuerna">Mancuerna</option><option value="banda">Banda</option><option value="kb">Kettlebell</option><option value="barra">Barra</option></select></div>'
  +'<div class="row"><label>Material</label><select class="inp" id="exR"><option value="">Ninguno especial</option>'+Object.keys(NOM).map(function(k){return '<option value="'+k+'">'+NOM[k]+'</option>'}).join('')+e.custom.map(function(c){return '<option value="'+c.id+'">'+esc(c.n)+'</option>'}).join('')+'</select>'
  +'<label>Si duele, cambiar por</label><select class="inp" id="exA"><option value="">Ninguno</option>'+Object.keys(LIB).map(function(k){return '<option value="'+k+'">'+esc(LIB[k].n)+'</option>'}).join('')+'</select></div>'
  +'<div class="row"><label>Series</label><input class="inp" id="exS" style="width:56px" value="3"><label>Reps</label><input class="inp" id="exR1" style="width:50px" value="8"><span style="color:var(--dim)">a</span><input class="inp" id="exR2" style="width:50px" value="12"><label>Peso inicial</label><input class="inp" id="exI" style="width:56px" placeholder="kg"></div>'
- +'<div class="row"><input class="nota" id="exC" placeholder="Cómo se ejecuta (opcional)"></div><div class="row"><button class="btn sm" onclick="addEjer()">Crear ejercicio</button></div></div>';
+ +'<div class="row"><input class="nota" id="exC" placeholder="Cómo se ejecuta (opcional)"></div>'
+ +'<div class="row"><label>Grupos musculares (si no marcas ninguno, se deduce del patrón)</label></div>'
+ +'<div class="row" style="flex-wrap:wrap;gap:6px 14px">'+Object.keys(MUSC).map(function(k){return '<label style="font-size:12.5px;color:var(--dim);display:flex;align-items:center;gap:5px"><input type="checkbox" class="chk" id="exM_'+k+'" style="width:16px;height:16px">'+MUSC[k]+'</label>'}).join('')+'</div>'
+ +'<div class="row"><button class="btn sm" onclick="addEjer()">Crear ejercicio</button></div></div>';
  /* movilidad */
  o+='<h3 class="sec">Movilidad de 8 minutos</h3><div class="eq">'+MOV.map(function(m,i){var off=(S.cfg.movOff||[]).indexOf(i)>=0;
   return '<div class="eqi"><input type="checkbox" id="mv'+i+'" '+(off?'':'checked')+' onchange="toggleMov('+i+',this.checked)"><label for="mv'+i+'">'+esc(m.n)+' <span class="u">'+m.seg+' s</span></label></div>'}).join('')
@@ -581,10 +622,12 @@ function addEjer(){
  var n=($('exN').value||'').trim();if(!n){toast('Ponle nombre',1);return}
  var r1=parseInt($('exR1').value)||8,r2=parseInt($('exR2').value)||12;if(r2<r1){var t=r1;r1=r2;r2=t}
  var tipo=$('exT').value,req=$('exR').value,alt=$('exA').value,ini=parseFloat($('exI').value),id=slug(n),pat=$('exP').value;
+ var mus=Object.keys(MUSC).filter(function(k){var el=$('exM_'+k);return el&&el.checked});
+ if(!mus.length)mus=(MUSC_POR_PAT[pat]||[]).slice();
  S.ejCustom[id]={n:n,pat:pat,req:req?[req]:[],tipo:tipo,inc:tipo==='barra'?2:(tipo==='kb'?2:1),r:[r1,r2],s:parseInt($('exS').value)||3,ini:isNaN(ini)?(tipo==='mancuerna'?2:0):ini,
-  zona:['rodilla','unilateral','bisagra','gluteo','cadera_lat'].indexOf(pat)>=0?'pierna':(pat==='core'?'core':'superior'),evita:[],alt:alt?[alt]:[],nivel:1,
+  zona:['rodilla','unilateral','bisagra','gluteo','cadera_lat'].indexOf(pat)>=0?'pierna':(pat==='core'?'core':'superior'),evita:[],alt:alt?[alt]:[],nivel:1,musculos:mus,
   c:($('exC').value||'').trim()||'Ejercicio añadido por ti.',b:'Exhala en el esfuerzo. Nunca bloquees el aire.',e:'',q:n,propio:1};
- LIB[id]=S.ejCustom[id];save();vAjustes();toast('"'+n+'" creado. Entra en la rotación de '+PATN[pat]);
+ LIB[id]=S.ejCustom[id];save();vAjustes();toast('"'+n+'" creado. Entra en la rotación de '+PATN[pat]+'. Trabaja '+musculosSesionTxt([id])+'.');
 }
 function delEjer(k){pregunta('¿Quitar "'+S.ejCustom[k].n+'"?',function(){delete S.ejCustom[k];delete LIB[k];Object.keys(S.cfg.sustituye).forEach(function(o){if(o===k||S.cfg.sustituye[o]===k)delete S.cfg.sustituye[o]});save();vAjustes()})}
 function exportar(){var t=JSON.stringify(S);

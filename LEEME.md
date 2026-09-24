@@ -1,8 +1,8 @@
-# IvannGym
+# OsmaGym
 
-PWA de fuerza, pádel, cuerpo y comida para Ivann: cinco operaciones, artrosis
+PWA de fuerza, pádel, cuerpo y comida para Osma: cinco operaciones, artrosis
 en caderas y muñeca izquierda, y quince años parado. Antes se llamaba Atlético
-47 (nombre provisional); IvannGym es el definitivo, con estética de cabina de
+47 (nombre provisional); OsmaGym es el definitivo, con estética de cabina de
 DJ. Derivada de una PWA hermana anterior en arquitectura, no en contenido:
 aquí no hay nada que no le sirva a él, y el pádel se queda porque es su
 deporte. El plan y el porqué de cada decisión están en el documento de
@@ -17,7 +17,7 @@ usados con moderación: la barra de progreso de Entreno es un vúmetro con
 segmentos y resplandor, los separadores de sección (`h3.sec`) llevan una
 forma de onda muy sutil en vez de una línea recta, y la cabecera tiene una
 textura de surcos de vinilo de fondo. Tipografía: **Monoton** solo para el
-logotipo «IvannGym» del encabezado (estética de flyer de club), **Barlow
+logotipo «OsmaGym» del encabezado (estética de flyer de club), **Barlow
 Condensed** para el resto de titulares (ya estaba), **IBM Plex Sans/Mono**
 para cuerpo y cifras. Los nombres de las pestañas siguen en español llano.
 Respeta `prefers-reduced-motion`. El icono (`tools/icono.html`) es un vinilo
@@ -43,8 +43,8 @@ base de datos. Las dos apps conviven en la misma Pi sin tocarse.
 La clave de `localStorage` (`a47v1`), el fichero `datos/atletico47.db`, las
 rutas `/api/*` y el puerto 8091 se mantienen tal cual desde la versión
 anterior: son identificadores de datos, y cambiarlos le haría perder el
-historial. Lo único que cambia de nombre son las cosas visibles (título,
-iconos, unidades systemd) y el paquete npm.
+historial. Tampoco cambian las unidades systemd (`atletico47-web.service` y
+`atletico47-push.service`): renombrarlas rompería `desplegar.sh`. Lo que cambia es lo visible (título, iconos, avisos) y el paquete npm.
 
 | Ruta | Qué es |
 |---|---|
@@ -103,9 +103,9 @@ npm install --omit=dev                 # solo @anthropic-ai/sdk, para el Coach
 cp coach.ejemplo.json coach.json && nano coach.json
 
 # 3. Servicios
-sudo cp systemd/ivanngym-*.service /etc/systemd/system/
+sudo cp systemd/atletico47-*.service /etc/systemd/system/
 sudo systemctl daemon-reload
-sudo systemctl enable --now ivanngym-web.service
+sudo systemctl enable --now atletico47-web.service
 curl http://127.0.0.1:8091/api/salud
 
 # 4. Tailscale Serve, en otro puerto que la PWA hermana
@@ -114,7 +114,7 @@ sudo tailscale serve --bg --https=10047 http://127.0.0.1:8091
 # 5. Push (opcional)
 cd servidor-push && npm install && node push.js --claves
 # pega la clave pública en Ajustes → Suscribir → Copiar suscripción → suscripciones.json (array)
-sudo systemctl enable --now ivanngym-push.service
+sudo systemctl enable --now atletico47-push.service
 ```
 
 Si el Coach no está configurado, la pestaña lo dice y todo lo demás funciona.
@@ -123,7 +123,7 @@ Si el Coach no está configurado, la pestaña lo dice y todo lo demás funciona.
 desplegado en la Pi, y `scripts/desplegar.sh` da por hecho esa ruta. Se
 mantiene con ese nombre a propósito, para no tener que mover nada en
 producción; el nombre de la app en todas partes visibles (título, iconos,
-unidades systemd, notificaciones) ya es IvannGym. Si algún día se renombra
+notificaciones) ya es OsmaGym. Si algún día se renombra
 también el directorio, hay que actualizar `BASE=` en `scripts/desplegar.sh`
 y `scripts/respaldo-db.sh`, y las rutas `WorkingDirectory=`/`ExecStart=` de
 los dos `.service`.
@@ -139,11 +139,12 @@ node servidor-web.js       # http://127.0.0.1:8091
 **Antes de commitear cualquier cambio dentro de `sitio/`:**
 
 ```bash
-./scripts/version-sw.sh    # sube ig-vN -> ig-v(N+1)
+./scripts/version-sw.sh    # sube og-vN -> og-v(N+1)
 ```
 
-Iconos: `tools/icono.html` renderizado con Chromium headless a 512, 192 y 180 px
-(`?masc=1` para el maskable).
+Iconos: `tools/icono.html` se renderiza siempre a 512 px con Chromium headless
+(`?masc=1` para el maskable) y de ahí se reduce a 192 y 180 px con `magick -resize`:
+la página tiene tamaño fijo y a otra resolución sale recortada.
 
 ## Desplegar y respaldar
 
@@ -155,7 +156,7 @@ ssh txetxaki@raspberry.taile8249e.ts.net '~/atletico47/scripts/desplegar.sh'
 ## GitHub Pages
 
 `.github/workflows/pages.yml` publica `sitio/` en Pages en cada push a `main`
-o `ivanngym`. Es solo la PWA estática: sin servidor, sin API, sin Coach, sin
+o `osmagym`. Es solo la PWA estática: sin servidor, sin API, sin Coach, sin
 push. `storage-remote.js` intenta hablar con `/api` y, si no existe (como en
 Pages), cae en silencio a `localStorage` sin avisos molestos; la app funciona
 igual, solo que sin sincronizar entre dispositivos.

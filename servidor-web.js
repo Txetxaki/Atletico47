@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* IvannGym — servidor estático de la PWA + API
+/* OsmaGym — servidor estático de la PWA + API
  *
  * Sirve sitio/ en 127.0.0.1:8091 (solo loopback). Tailscale Serve pone el
  * HTTPS por delante. Mismo esquema que la PWA hermana, en otro puerto: otro
@@ -74,5 +74,5 @@ const servidor = http.createServer((req, res) => {
 });
 
 servidor.listen(PUERTO, HOST, () => {
-  console.log('IvannGym sirviendo ' + RAIZ + ' en http://' + HOST + ':' + PUERTO + (coach.configurado() ? ' · coach activo' : ' · coach sin configurar'));
+  console.log('OsmaGym sirviendo ' + RAIZ + ' en http://' + HOST + ':' + PUERTO + (coach.configurado() ? ' · coach activo' : ' · coach sin configurar'));
 });

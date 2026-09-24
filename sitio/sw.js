@@ -1,8 +1,8 @@
-/* IvannGym — service worker
+/* OsmaGym — service worker
    Guarda la app para que funcione sin cobertura y recibe las notificaciones push.
    Antes de commitear cambios en sitio/, sube la versión: scripts/version-sw.sh */
 
-const CACHE = 'ig-v2';
+const CACHE = 'og-v3';
 const ASSETS = [
   './',
   './index.html',
@@ -49,7 +49,7 @@ self.addEventListener('fetch', e => {
 });
 
 self.addEventListener('push', e => {
-  let d = { title: 'IvannGym', body: 'Toca moverse', tag: 'ig', url: './index.html' };
+  let d = { title: 'OsmaGym', body: 'Toca moverse', tag: 'og', url: './index.html' };
   try { if (e.data) d = Object.assign(d, e.data.json()); } catch (_) { if (e.data) d.body = e.data.text(); }
   e.waitUntil(self.registration.showNotification(d.title, {
     body: d.body, icon: './icon-192.png', badge: './icon-192.png', tag: d.tag, renotify: true,
@@ -68,6 +68,6 @@ self.addEventListener('notificationclick', e => {
 
 self.addEventListener('message', e => {
   if (e.data && e.data.tipo === 'probar') {
-    self.registration.showNotification('IvannGym', { body: e.data.texto || 'Las notificaciones funcionan.', icon: './icon-192.png', vibrate: [180, 90, 180] });
+    self.registration.showNotification('OsmaGym', { body: e.data.texto || 'Las notificaciones funcionan.', icon: './icon-192.png', vibrate: [180, 90, 180] });
   }
 });

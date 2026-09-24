@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# IvannGym - subir la version de cache del service worker
+# OsmaGym - subir la version de cache del service worker
 #
 #   ./scripts/version-sw.sh
 #

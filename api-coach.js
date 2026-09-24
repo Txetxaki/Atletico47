@@ -1,4 +1,4 @@
-/* IvannGym — proxy del Coach
+/* OsmaGym — proxy del Coach
  *
  * La app NO habla con la API de Claude directamente: lo hace este proceso,
  * con la clave leída de coach.json (fuera de git) o de ANTHROPIC_API_KEY.

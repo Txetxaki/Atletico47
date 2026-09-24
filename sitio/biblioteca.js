@@ -1,4 +1,4 @@
-/* IvannGym — biblioteca de ejercicios, plantillas, movilidad y comida
+/* OsmaGym — biblioteca de ejercicios, plantillas, movilidad y comida
  *
  * Todo lo que es DATO vive aquí. El motor (motor.js) decide qué entra en cada
  * sesión; las vistas (app.js) lo pintan. Cambiar un ejercicio es tocar este

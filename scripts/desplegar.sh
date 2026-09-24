@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# IvannGym - desplegar en la Raspberry
+# OsmaGym - desplegar en la Raspberry
 #
 #   ssh txetxaki@raspberry.taile8249e.ts.net '~/atletico47/scripts/desplegar.sh'
 #
 # La carpeta de produccion /home/txetxaki/atletico47 ES el checkout de git.
 # Se mantiene ese nombre por continuidad (es el path ya usado en la Pi);
-# el nombre visible de la app es IvannGym, pero el directorio no se mueve.
+# el nombre visible de la app es OsmaGym, pero el directorio no se mueve.
 # Desplegar es traer el commit y comprobar que sigue todo en pie.
 
 set -euo pipefail
@@ -43,12 +43,12 @@ if ! git diff --quiet "$ANTES" "$DESPUES" -- package.json; then
 fi
 if ! git diff --quiet "$ANTES" "$DESPUES" -- servidor-web.js api-estado.js api-coach.js package.json; then
   echo "Ha cambiado el servidor web: reiniciando"
-  sudo systemctl restart ivanngym-web.service
+  sudo systemctl restart atletico47-web.service
   sleep 2
 fi
 if ! git diff --quiet "$ANTES" "$DESPUES" -- servidor-push/push.js; then
   echo "Ha cambiado el planificador push: reiniciando"
-  sudo systemctl restart ivanngym-push.service
+  sudo systemctl restart atletico47-push.service
 fi
 
 echo

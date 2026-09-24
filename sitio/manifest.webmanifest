@@ -1,6 +1,6 @@
 {
-  "name": "IvannGym",
-  "short_name": "IvannGym",
+  "name": "OsmaGym",
+  "short_name": "OsmaGym",
   "description": "Fuerza, pádel, cuerpo y comida, adaptado a tus articulaciones",
   "start_url": "./index.html",
   "scope": "./",

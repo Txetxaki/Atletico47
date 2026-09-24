@@ -1,5 +1,5 @@
 [Unit]
-Description=IvannGym - servidor estatico de la PWA y API
+Description=OsmaGym - planificador de notificaciones push
 After=network-online.target
 Wants=network-online.target
 
@@ -7,10 +7,10 @@ Wants=network-online.target
 Type=simple
 User=txetxaki
 Group=txetxaki
-WorkingDirectory=/home/txetxaki/atletico47
-ExecStart=/usr/bin/node /home/txetxaki/atletico47/servidor-web.js
+WorkingDirectory=/home/txetxaki/atletico47/servidor-push
+ExecStart=/usr/bin/node /home/txetxaki/atletico47/servidor-push/push.js
 Restart=always
-RestartSec=5
+RestartSec=10
 NoNewPrivileges=true
 PrivateTmp=true
 StandardOutput=journal

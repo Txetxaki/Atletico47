@@ -1,21 +1,21 @@
-# Secretos: la clave de la API del Coach y la clave VAPID privada.
-coach.json
-servidor-push/config.json
-
-# Endpoints personales de cada dispositivo suscrito.
-servidor-push/suscripciones.json
-servidor-push/agenda.json
-
-# Dependencias
-node_modules/
-package-lock.json
-
-# Índice local de CodeGraph
-.codegraph/
 
 # Datos de produccion: viven solo en la Pi y se respaldan con scripts/respaldo-db.sh
+# Dependencias
+# Endpoints personales de cada dispositivo suscrito.
+# Índice local de CodeGraph
+# Secretos: la clave de la API del Coach y la clave VAPID privada.
+coach.json
+.codegraph/
 datos/
 *.db
 *.db-shm
 *.db-wal
+.env*
+.env*.local
+node_modules/
+package-lock.json
 respaldos/
+servidor-push/agenda.json
+servidor-push/config.json
+servidor-push/suscripciones.json
+.vercel

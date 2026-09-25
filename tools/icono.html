@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html><head><meta charset="utf-8">
-<link href="https://fonts.googleapis.com/css2?family=Monoton&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bungee&display=swap" rel="stylesheet">
 <style>
-html,body{margin:0;background:#0B0712}
-.ic{width:512px;height:512px;background:#0B0712;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+html,body{margin:0;background:#0C0B09}
+.ic{width:512px;height:512px;background:#0C0B09;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
 .ic svg{width:512px;height:512px;display:block}
 .ic.masc #art{transform-origin:256px 256px;transform:scale(.7)}
 </style></head>
@@ -11,35 +11,56 @@ html,body{margin:0;background:#0B0712}
 <div class="ic" id="ic">
 <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <radialGradient id="disco" cx="50%" cy="42%" r="65%">
-      <stop offset="0%" stop-color="#231A38"/>
-      <stop offset="70%" stop-color="#150F24"/>
-      <stop offset="100%" stop-color="#0B0712"/>
+    <radialGradient id="cono" cx="50%" cy="42%" r="65%">
+      <stop offset="0%" stop-color="#241E17"/>
+      <stop offset="70%" stop-color="#17130E"/>
+      <stop offset="100%" stop-color="#0C0B09"/>
     </radialGradient>
-    <radialGradient id="label" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#FF6FE0"/>
-      <stop offset="100%" stop-color="#FF2FD4"/>
+    <radialGradient id="cap" cx="42%" cy="38%" r="60%">
+      <stop offset="0%" stop-color="#FFE18C"/>
+      <stop offset="100%" stop-color="#FFC72C"/>
     </radialGradient>
   </defs>
-  <rect width="512" height="512" fill="#0B0712"/>
+  <rect width="512" height="512" fill="#0C0B09"/>
   <g id="art">
-    <!-- vinyl record -->
-    <circle cx="256" cy="256" r="210" fill="url(#disco)" stroke="#2C2148" stroke-width="4"/>
-    <circle cx="256" cy="256" r="182" fill="none" stroke="#241B3A" stroke-width="2"/>
-    <circle cx="256" cy="256" r="158" fill="none" stroke="#241B3A" stroke-width="2"/>
-    <circle cx="256" cy="256" r="134" fill="none" stroke="#241B3A" stroke-width="2"/>
-    <circle cx="256" cy="256" r="110" fill="none" stroke="#241B3A" stroke-width="2"/>
-    <!-- label -->
-    <circle cx="256" cy="256" r="86" fill="url(#label)"/>
-    <circle cx="256" cy="256" r="86" fill="none" stroke="#0B0712" stroke-width="3"/>
-    <circle cx="256" cy="256" r="10" fill="#0B0712"/>
-    <text x="256" y="273" font-family="Monoton, 'Barlow Condensed', sans-serif" font-size="60" fill="#F3EEFB" text-anchor="middle">OG</text>
-    <!-- tonearm -->
-    <g stroke-linecap="round">
-      <circle cx="396" cy="120" r="22" fill="none" stroke="#22E7FF" stroke-width="10"/>
-      <line x1="384" y1="135" x2="300" y2="222" stroke="#22E7FF" stroke-width="10"/>
-      <line x1="300" y1="222" x2="318" y2="248" stroke="#22E7FF" stroke-width="10"/>
-      <circle cx="318" cy="248" r="8" fill="#F3EEFB"/>
+    <!-- altavoz / subwoofer: aros concéntricos del cono -->
+    <circle cx="256" cy="246" r="206" fill="url(#cono)" stroke="#2B241C" stroke-width="4"/>
+    <circle cx="256" cy="246" r="180" fill="none" stroke="#2B241C" stroke-width="2"/>
+    <circle cx="256" cy="246" r="154" fill="none" stroke="#2B241C" stroke-width="2"/>
+    <circle cx="256" cy="246" r="128" fill="none" stroke="#2B241C" stroke-width="2"/>
+    <circle cx="256" cy="246" r="102" fill="none" stroke="#2B241C" stroke-width="2"/>
+    <!-- tornillos de montaje, a las cuatro esquinas del aro -->
+    <g fill="#3A3122">
+      <circle cx="110" cy="100" r="11"/>
+      <circle cx="402" cy="100" r="11"/>
+      <circle cx="110" cy="392" r="11"/>
+      <circle cx="402" cy="392" r="11"/>
+    </g>
+    <g fill="#584A2E">
+      <circle cx="110" cy="100" r="4"/>
+      <circle cx="402" cy="100" r="4"/>
+      <circle cx="110" cy="392" r="4"/>
+      <circle cx="402" cy="392" r="4"/>
+    </g>
+    <!-- tapa central (dust cap) con OG -->
+    <circle cx="256" cy="246" r="88" fill="url(#cap)" stroke="#0C0B09" stroke-width="3"/>
+    <text x="256" y="268" font-family="Bungee, 'Barlow Condensed', sans-serif" font-size="58" fill="#0C0B09" text-anchor="middle">OG</text>
+    <!-- tricolor: rojo-oro-verde -->
+    <g>
+      <rect x="180" y="330" width="50.6" height="13" fill="#E23A2E"/>
+      <rect x="230.6" y="330" width="50.6" height="13" fill="#FFC72C"/>
+      <rect x="281.2" y="330" width="50.6" height="13" fill="#1FA64A"/>
+    </g>
+    <!-- micro, apoyado en la esquina inferior derecha -->
+    <g transform="translate(372,372) rotate(-28)" stroke-linecap="round">
+      <line x1="0" y1="0" x2="-6" y2="56" stroke="#D9A100" stroke-width="7"/>
+      <rect x="-24" y="-58" width="48" height="68" rx="22" fill="#17130E" stroke="#FFC72C" stroke-width="5"/>
+      <g stroke="#FFC72C" stroke-width="3">
+        <line x1="-13" y1="-40" x2="13" y2="-40"/>
+        <line x1="-13" y1="-30" x2="13" y2="-30"/>
+        <line x1="-13" y1="-20" x2="13" y2="-20"/>
+        <line x1="-13" y1="-10" x2="13" y2="-10"/>
+      </g>
     </g>
   </g>
 </svg>

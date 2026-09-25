@@ -10,18 +10,22 @@ diseño; este LEEME es la parte técnica.
 
 **Estado:** lista para desplegar. Falta poner la clave del Coach.
 
-## Diseño: cabina de DJ
+## Diseño: sound system de rap/dancehall
 
-Fondo casi negro, acentos neón magenta/cian, motivos de mesa de mezclas
-usados con moderación: la barra de progreso de Entreno es un vúmetro con
-segmentos y resplandor, los separadores de sección (`h3.sec`) llevan una
-forma de onda muy sutil en vez de una línea recta, y la cabecera tiene una
-textura de surcos de vinilo de fondo. Tipografía: **Monoton** solo para el
-logotipo «OsmaGym» del encabezado (estética de flyer de club), **Barlow
-Condensed** para el resto de titulares (ya estaba), **IBM Plex Sans/Mono**
-para cuerpo y cifras. Los nombres de las pestañas siguen en español llano.
-Respeta `prefers-reduced-motion`. El icono (`tools/icono.html`) es un vinilo
-con el mono­grama «IG» en el label y un brazo de plato en cian.
+Fondo negro asfalto con grano sutil, acentos oro/verde/rojo (bandera de
+sound system jamaicano), texto crema cálido. La barra de progreso de
+Entreno es un vúmetro con segmentos y resplandor dorado, los separadores
+de sección (`h3.sec`) llevan una forma de onda muy sutil (bassline) en vez
+de una línea recta, la cabecera lleva un tricolor rojo-oro-verde fino en
+el borde inferior y una textura de aros concéntricos (cono de altavoz) muy
+tenue de fondo. Tipografía: **Bungee** para el logotipo «OsmaGym» y los
+titulares de sección (estética de flyer callejero/graffiti, legible),
+**Barlow Condensed** para pestañas, botones y cifras destacadas (ya
+estaba), **IBM Plex Sans/Mono** para cuerpo y cifras. Los nombres de las
+pestañas siguen en español llano. Respeta `prefers-reduced-motion`. El
+icono (`tools/icono.html`) es un altavoz/subwoofer con el monograma «OG»
+en la tapa central, un tricolor rojo-oro-verde y un micrófono apoyado en
+la esquina.
 
 ---
 

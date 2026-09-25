@@ -1,0 +1,12 @@
+# OsmaGym en Vercel es sitio/ + api/coach.js + coach-core.js: todo lo demás es
+# cosa de la Raspberry (servidor propio, systemd, datos, scripts de despliegue)
+# y no debe subirse.
+datos/
+respaldos/
+servidor-push/
+systemd/
+scripts/
+tools/
+coach.json
+node_modules
+.github

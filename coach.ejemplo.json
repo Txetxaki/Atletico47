@@ -1,5 +1,6 @@
 {
-  "clave": "sk-ant-PEGA-AQUI-LA-CLAVE-Y-GUARDA-COMO-coach.json",
-  "modelo": "claude-opus-5",
-  "max_tokens": 1500
+  "clave": "PEGA-AQUI-LA-CLAVE-DE-MINIMAX-Y-GUARDA-COMO-coach.json",
+  "modelo": "MiniMax-M3",
+  "max_tokens": 1500,
+  "codigo": ""
 }

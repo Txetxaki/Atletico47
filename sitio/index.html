@@ -189,7 +189,7 @@ footer{border-top:1px solid var(--line);margin-top:30px;padding:16px 0 24px;font
 <nav class="days" id="days" aria-label="Días"></nav>
 <div class="hd"><h2 id="tt"></h2><span class="when" id="when"></span></div>
 <p class="sub" id="ss"></p>
-<div class="row" id="semanaRow"><button class="btn gh sm" onclick="regenerarSemana()">↻ Regenerar semana</button><button class="btn gh sm" onclick="cerrarSemana()">Empezar semana nueva</button></div>
+<div class="row" id="semanaRow"><button class="btn gh sm" onclick="regenerarSemana()">↻ Regenerar semana</button><button class="btn gh sm" onclick="cerrarSemana()">Empezar semana nueva</button><button class="btn gh sm" id="btnRestaurarSemana" hidden onclick="deshacerSemana()">Restaurar semana</button></div>
 <div class="row" id="regenRow" hidden><button class="btn gh sm" onclick="regenerarDia()">↻ Regenerar día</button></div>
 <div class="bar"><i id="prog"></i></div>
 <div id="main"></div>

@@ -8,8 +8,5 @@
     "start": "node servidor-web.js",
     "push": "node servidor-push/push.js"
   },
-  "engines": { "node": ">=22.5" },
-  "dependencies": {
-    "@anthropic-ai/sdk": "^0.123.0"
-  }
+  "engines": { "node": ">=22.5" }
 }

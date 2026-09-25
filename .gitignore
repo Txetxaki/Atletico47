@@ -10,6 +10,9 @@ servidor-push/agenda.json
 node_modules/
 package-lock.json
 
+# Índice local de CodeGraph
+.codegraph/
+
 # Datos de produccion: viven solo en la Pi y se respaldan con scripts/respaldo-db.sh
 datos/
 *.db

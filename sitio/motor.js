@@ -26,7 +26,7 @@ var DEF={
  comidas:[],           // diario de comida real [{f,h,t,plan}]
  platos:[],            // mis platos [{n,t}]
  desvios:[],notas:{comida:[]},
- regen:{},           // regeneraciones de hoy {fecha:{indiceDeHueco:idEjercicio}}, se limpia al cambiar de día
+ regen:{},           // regeneraciones {fecha:{indiceDeHueco:idEjercicio}} de hoy y días futuros; se limpian al quedar en el pasado o al empezar semana nueva
  push:null
 };
 var S=null,_ready=false;
@@ -51,8 +51,8 @@ function load(cb){
   for(var k in S.ejCustom)LIB[k]=S.ejCustom[k];
   // La disposición diaria solo interesa 60 días: lo demás fuera, que el blob no engorde.
   var lim=diasAtras(60);Object.keys(S.hoy).forEach(function(f){if(f<lim)delete S.hoy[f]});
-  // Las regeneraciones son de hoy: al cambiar de día se olvidan.
-  if(!S.regen)S.regen={};var hoyR=hoyISO();Object.keys(S.regen).forEach(function(f){if(f!==hoyR)delete S.regen[f]});
+  // Las regeneraciones valen para hoy y para los días futuros de la semana; solo se olvidan al quedar en el pasado.
+  if(!S.regen)S.regen={};var hoyR=hoyISO();Object.keys(S.regen).forEach(function(f){if(f<hoyR)delete S.regen[f]});
   _ready=true;cb();
  }
  try{

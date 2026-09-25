@@ -50,12 +50,15 @@ function pararG(){clearInterval(G.t);G.lista=null;$('guia').classList.remove('on
 
 /* ============ NAVEGACIÓN ============ */
 var TABS=['hoy','tr','hi','pa','cu','co','ai','aj'];
+var VISTAS={hoy:vHoy,tr:vTr,hi:vHist,pa:vPadel,cu:vCuerpo,co:vComida,ai:vAI,aj:vAjustes};
 function vw(id){
  TABS.forEach(function(x){$(x).hidden=(x!==id)});
  document.querySelectorAll('.tab').forEach(function(b){b.setAttribute('aria-selected',b.dataset.t===id)});
- ({hoy:vHoy,tr:vTr,hi:vHist,pa:vPadel,cu:vCuerpo,co:vComida,ai:vAI,aj:vAjustes})[id]();
+ VISTAS[id]();
  window.scrollTo({top:0,behavior:'smooth'});
 }
+/* repinta la pestaña que esté abierta ahora mismo, sin cambiar de pestaña */
+function refrescar(){var vis=TABS.filter(function(x){return $(x)&&!$(x).hidden})[0];if(vis&&VISTAS[vis])VISTAS[vis]()}
 function avisosHTML(){
  return alertas().map(function(a){
   return '<div class="note '+a.n+'"><b>'+a.t+'</b>'+a.c+(a.accion==='descargaYa'?'<div class="row" style="margin-top:10px"><button class="btn sm" onclick="descargaYa()">Adelantar la descarga</button></div>':'')+'</div>'}).join('');
@@ -87,6 +90,7 @@ function vHoy(){
  o+='<h3 class="sec">La semana</h3><div class="days">'+DIAS.map(function(k){
   var qq=queToca(k,f),lab=qq.tipo==='fuerza'?qq.k:(qq.tipo==='padel'?'pádel':'movil');
   return '<button class="day'+(qq.tipo==='movil'?' rest':'')+(k===dia?' hoyd':'')+'" aria-pressed="'+(k===diaSel)+'" onclick="verDiaSem(\''+k+'\')"><span class="d">'+DIAL[k]+'</span><span class="l">'+lab+'</span></button>'}).join('')+'</div>';
+ o+='<div class="row" style="margin-top:10px"><button class="btn gh sm" onclick="regenerarSemana()">↻ Regenerar semana</button><button class="btn gh sm" onclick="cerrarSemana()">Empezar semana nueva</button></div>';
  o+='<div id="diaSem">'+diaSemHTML(diaSel)+'</div>';
  var cs=cargaSemana();
  o+='<div class="grid">'+stat(cs.fuerza,'fuerza esta semana')+stat(cs.partidos,'partidos')+stat(rachaMovil(),'días seguidos de movilidad')+stat(S.hist.length,'sesiones totales')+'</div>';
@@ -137,8 +141,17 @@ function empezarMovil(){
 /* ============ ENTRENO ============ */
 var cur=diaSemana(hoyISO()),borrador={},fechaSes=null;
 function pick(k){cur=k;borrador={};vTr();window.scrollTo({top:0,behavior:'smooth'})}
+/* fecha con la que trabaja Entreno: la elegida a mano en el selector de fecha (fechaSes, siempre
+   hoy o pasada), o si no, la fecha real del día de la semana que se está viendo (cur). Así, si se
+   elige un día futuro de esta semana en el selector de días, todo (regen, ajustes, guardado) usa
+   su fecha real; si se elige un día pasado sin fijar fecha a mano, se sigue tratando como hoy. */
+function fechaCtx(){
+ if(fechaSes)return fechaSes;
+ var f=fechaDeDia(cur);
+ return f>=hoyISO()?f:hoyISO();
+}
 function ejerciciosHoy(s){ // aplica regeneraciones, swaps de disposición y "me duele"
- var f=fechaSes||hoyISO(),a=ajustesDe(f),base=idsConRegen(s,f);
+ var f=fechaCtx(),a=ajustesDe(f),base=idsConRegen(s,f);
  return base.map(function(id,i){
   var b=borrador[cur+i];
   if(b&&b.cambio)return b.cambio.por;
@@ -149,7 +162,7 @@ function musculosHTML(id){return musculosDe(id).map(function(m){return '<span cl
 /* "Regenerar": cambia un ejercicio de hoy por otro disponible del mismo patrón o músculo primario.
    Cicla entre los candidatos sin repetir hasta agotarlos; descarta lo apuntado en ese hueco. */
 function regenerar(i){
- var f=fechaSes||hoyISO(),s=sesionDe(cur,f);if(!s)return;
+ var f=fechaCtx(),s=sesionDe(cur,f);if(!s)return;
  var baseId=s.ej[i],ids=ejerciciosHoy(s),otros=ids.filter(function(x,j){return j!==i});
  var cand=candidatosRegen(baseId,otros,f);
  if(!cand.length){toast('No hay otra opción para este músculo con tu material',1);return}
@@ -161,7 +174,7 @@ function regenerar(i){
 }
 /* "Regenerar día": lo mismo pero para todos los huecos de la sesión, manteniendo la cobertura muscular. */
 function regenerarDia(){
- var f=fechaSes||hoyISO(),s=sesionDe(cur,f);if(!s)return;
+ var f=fechaCtx(),s=sesionDe(cur,f);if(!s)return;
  var haceLog=Object.keys(borrador).some(function(k){var b=borrador[k];return b&&((b.reps&&b.reps.some(function(r){return r>0}))||b.peso!==undefined||b.rpe)});
  var ir=function(){
   var nuevos=s.ej.slice(),sinAlt=[];
@@ -178,8 +191,49 @@ function regenerarDia(){
  };
  if(haceLog)pregunta('Ya has apuntado algo en la sesión de hoy. ¿Regenerar el día y perder lo apuntado?',ir);else ir();
 }
+/* días de fuerza de la semana actual, de hoy en adelante, que aún no tienen una sesión guardada
+   (si ya se guardó, esa sesión es historial y no se toca). */
+function fechasFuerzaSemanaDesdeHoy(){
+ var hoy=hoyISO(),out=[];
+ DIAS.forEach(function(k){
+  var f=fechaDeDia(k);
+  if(f<hoy)return;
+  if(queToca(k,f).tipo!=='fuerza')return;
+  if(sesDe(f))return;
+  out.push({dia:k,f:f});
+ });
+ return out;
+}
+/* "Regenerar semana": aplica el mismo cambio de "Regenerar día" a todas las sesiones de fuerza
+   de hoy en adelante dentro de la semana actual. Días pasados y sesiones ya guardadas no se tocan. */
+function regenerarSemana(){
+ var dias=fechasFuerzaSemanaDesdeHoy();
+ if(!dias.length){toast('No queda ninguna sesión de fuerza por regenerar esta semana',1);return}
+ var haceLog=Object.keys(borrador).some(function(k){var b=borrador[k];return b&&((b.reps&&b.reps.some(function(r){return r>0}))||b.peso!==undefined||b.rpe)});
+ var ir=function(){
+  var resumen=[],sinAltTotal=[];
+  dias.forEach(function(x){
+   var s=sesionDe(x.dia,x.f);if(!s)return;
+   var nuevos=s.ej.slice(),sinAlt=[];
+   s.ej.forEach(function(baseId,i){
+    var otros=nuevos.filter(function(v,j){return j!==i});
+    var cand=candidatosRegen(baseId,otros,x.f);
+    if(cand.length)nuevos[i]=cand[0];else sinAlt.push(LIB[baseId]?LIB[baseId].n:baseId);
+   });
+   S.regen=S.regen||{};S.regen[x.f]={};
+   nuevos.forEach(function(id,i){if(id!==s.ej[i])S.regen[x.f][i]=id});
+   resumen.push(fmtF(x.f)+': '+musculosSesionTxt(idsConRegen(s,x.f)));
+   sinAltTotal=sinAltTotal.concat(sinAlt);
+  });
+  borrador={};save();
+  var sinAltU=sinAltTotal.filter(function(v,i,a){return a.indexOf(v)===i});
+  toast((sinAltU.length?'Sin alternativa para: '+sinAltU.join(', ')+'. ':'')+'Semana regenerada. '+resumen.join(' · '));
+  refrescar();
+ };
+ pregunta('¿Regenerar la semana? Cambia los ejercicios de '+dias.length+' sesión'+(dias.length===1?'':'es')+' de fuerza, de hoy en adelante.'+(haceLog?' Se pierde lo apuntado hoy que no hayas guardado.':''),ir);
+}
 function vTr(){
- var f=fechaSes||hoyISO();
+ var f=fechaCtx();
  $('days').innerHTML=DIAS.map(function(k){var q=queToca(k,f);
   return '<button class="day'+(q.tipo!=='fuerza'?' rest':'')+'" aria-pressed="'+(k===cur)+'" onclick="pick(\''+k+'\')"><span class="d">'+DIAL[k]+'</span><span class="l">'+(q.tipo==='fuerza'?q.k:(q.tipo==='padel'?'pádel':'movil'))+'</span></button>'}).join('');
  var s=sesionDe(cur,f),m=$('main'),q=queToca(cur,f);
@@ -224,9 +278,9 @@ function vTr(){
   +[5,6,7,8,9].map(function(r){return '<option value="'+r+'"'+(b.rpe==r?' selected':'')+'>'+r+'</option>'}).join('')+'</select></div>'
   +'<input class="nota" placeholder="Nota: molestias, sensaciones, lo que sea" value="'+esc(b.nota||'')+'" oninput="setNota(\''+cur+i+'\',this.value)">'
   +'</div></article>'}).join('');
- var esHoy=(f===hoyISO());
+ var esHoy=(f===hoyISO()),esFuturo=(f>hoyISO());
  html+='<div class="row" style="margin-top:20px"><label>Día</label><input class="inp" type="date" value="'+f+'" max="'+hoyISO()+'" onchange="setFecha(this.value)">'
- +(esHoy?'<span class="mkcal">hoy</span>':'<span class="mkcal" style="color:var(--warn)">retroactivo</span>')+'</div>';
+ +(esHoy?'<span class="mkcal">hoy</span>':(esFuturo?'<span class="mkcal">'+fmtF(f)+'</span>':'<span class="mkcal" style="color:var(--warn)">retroactivo</span>'))+'</div>';
  html+='<div class="row"><button class="btn" onclick="guardarSesion()">Guardar sesión</button><button class="btn gh sm" onclick="talCual()">Rellenar tal cual</button><button class="btn gh sm" onclick="limpiar()">Limpiar</button></div>';
  html+=nota('<b>Me duele</b>Cada ejercicio tiene una alternativa a un toque. Si algo duele, cámbialo y sigue: queda apuntado en la sesión. Si el dolor se repite dos sesiones, márcalo en Ajustes como articulación en fase mala y el motor lo saca del plan hasta que lo desmarques.');
  html+=nota('<b>Si lo hiciste tal cual</b>Dale a Guardar sin escribir nada y doy por hecho que seguiste el plan: peso propuesto, tope de repeticiones y RPE 7. Si un ejercicio fue distinto, escribe solo ese.');
@@ -240,29 +294,29 @@ function sustituirHTML(orig,ids){var act=S.cfg.sustituye[orig],c=mismoPat(orig,i
 function sustituir(orig,v){if(v)S.cfg.sustituye[orig]=v;else delete S.cfg.sustituye[orig];save();borrador={};vTr();toast(v?'Desde ahora, '+LIB[v].n+' en lugar de '+LIB[orig].n:'Vuelve '+LIB[orig].n)}
 function op(i){var e=$('e'+i);if(!e)return;var o=e.classList.toggle('open');e.querySelector('.exhd').setAttribute('aria-expanded',o)}
 function bd(k){if(!borrador[k])borrador[k]={reps:[]};if(!borrador[k].reps)borrador[k].reps=[];return borrador[k]}
-function setRep(k,j,v){var b=bd(k);b.reps[j]=parseInt(v)||0;progBar(sesionDe(cur,fechaSes||hoyISO()));
+function setRep(k,j,v){var b=bd(k);b.reps[j]=parseInt(v)||0;progBar(sesionDe(cur,fechaCtx()));
  var el=event.target.parentNode;el.classList.toggle('ok',!!parseInt(v));
  if(parseInt(v))startT(descansoDe(parseInt(k.slice(3))));}
 function setPeso(k,v){bd(k).peso=parseFloat(v)||0}
 function setRpe(k,v){bd(k).rpe=parseInt(v)||0}
 function setNota(k,v){bd(k).nota=v}
-function meDuele(i){var s=sesionDe(cur,fechaSes||hoyISO()),ids=ejerciciosHoy(s),id=ids[i],alt=alternativa(id,ids);
+function meDuele(i){var s=sesionDe(cur,fechaCtx()),ids=ejerciciosHoy(s),id=ids[i],alt=alternativa(id,ids);
  if(!alt)return;var b=bd(cur+i);b.cambio={de:s.ej[i],por:alt};b.reps=[];b.peso=undefined;
  toast('Cambiado a '+LIB[alt].n+'. Queda apuntado.');vTr();
  setTimeout(function(){op(i)},50)}
 function deshacerCambio(i){var b=bd(cur+i);delete b.cambio;b.reps=[];b.peso=undefined;vTr()}
-function progBar(s){if(!s)return;var t=0,d=0,f=fechaSes||hoyISO();
+function progBar(s){if(!s)return;var t=0,d=0,f=fechaCtx();
  ejerciciosHoy(s).forEach(function(id,i){t+=seriesDe(id,f);var b=borrador[cur+i];if(b&&b.reps)b.reps.forEach(function(r){if(r>0)d++})});
  $('prog').style.width=(t?d/t*100:0)+'%';}
 function setFecha(v){fechaSes=v||hoyISO();cur=diaSemana(fechaSes);borrador={};vTr();toast(fechaSes===hoyISO()?'Se guardará con fecha de hoy':'Se guardará con fecha '+fmtF(fechaSes))}
-function talCual(){var f=fechaSes||hoyISO(),s=sesionDe(cur,f);if(!s)return;
+function talCual(){var f=fechaCtx(),s=sesionDe(cur,f);if(!s)return;
  ejerciciosHoy(s).forEach(function(id,i){var L=LIB[id],sg=sugerir(id,f),b=bd(cur+i),n=seriesDe(id,f);
   for(var j=0;j<n;j++)if(!b.reps[j])b.reps[j]=L.r[1];
   if(b.peso===undefined)b.peso=sg.peso;if(!b.rpe)b.rpe=7});
  vTr();toast('Rellenado con el plan. Cambia lo que fuera distinto.')}
 function limpiar(){pregunta('¿Borrar lo que has apuntado hoy?',function(){borrador={};vTr();toast('Borrado')})}
 function guardarSesion(){
- var f=fechaSes||hoyISO(),s=sesionDe(cur,f);if(!s)return;
+ var f=fechaCtx(),s=sesionDe(cur,f);if(!s)return;
  var ids=ejerciciosHoy(s),ej=[],asumidos=0;
  ids.forEach(function(id,i){
   var L=LIB[id],b=borrador[cur+i]||{},sg=sugerir(id,f),reps=(b.reps||[]).filter(function(r){return r>0}),auto=0;
@@ -344,11 +398,11 @@ function vHist(){
 function cerrarSemana(){
  if(!S.hist.length){toast('Guarda al menos una sesión antes de cerrar la semana',1);return}
  pregunta('¿Cerrar la semana '+S.semana+'? Se genera la '+(S.semana+1)+' con los pesos actualizados.',function(){
-  S.semana++;save();var msg='Semana '+S.semana+' generada.';
+  S.semana++;S.regen={};save();var msg='Semana '+S.semana+' generada.';
   if(esDeload())msg+=' DESCARGA: 85% y una serie menos.';
   if(S.semana%4===1&&S.semana>1)msg+=' Cambio de bloque: rotan ejercicios.';
   if(S.semana===6)msg+=' Se abren las dominadas negativas.';
-  toast(msg);vHist()});
+  toast(msg);refrescar()});
 }
 
 /* ============ PÁDEL ============ */

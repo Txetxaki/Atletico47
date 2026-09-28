@@ -170,8 +170,16 @@ function extraCard(x,j){
  +'<div class="row" style="margin-top:10px"><button class="btn sm exhecho" onclick="toggleHechoX('+j+')">'+(h?'Desmarcar':'Hecho')+'</button><button class="btn gh sm rojo" onclick="delX('+j+')">Quitar</button></div>'
  +'</div></article>';
 }
+/* Acordeón: al abrir una tarjeta se cierra la que estuviera abierta. Se
+   compensa el scroll para que la tarjeta tocada no salte si la que se cierra
+   está por encima. */
+function cerrarOtros(el){
+ var antes=el.getBoundingClientRect().top;
+ document.querySelectorAll('.ex.open').forEach(function(x){if(x===el)return;x.classList.remove('open');var h=x.querySelector('.exhd');if(h)h.setAttribute('aria-expanded','false')});
+ var d=el.getBoundingClientRect().top-antes;if(d)window.scrollBy(0,d);
+}
 function _X(){return borrador._x=borrador._x||[]}
-function opX(j){var e=document.getElementById('x'+j);if(!e)return;var o=e.classList.toggle('open');e.querySelector('.exhd').setAttribute('aria-expanded',o)}
+function opX(j){var e=document.getElementById('x'+j);if(!e)return;if(!e.classList.contains('open'))cerrarOtros(e);var o=e.classList.toggle('open');e.querySelector('.exhd').setAttribute('aria-expanded',o)}
 function setRepX(j,k,v){var x=_X()[j];x.reps=x.reps||[];x.reps[k]=parseInt(v)||0;if(parseInt(v))x.hecho=1;guardarBorr();marcarEj('x'+j,hechoX(x));progBar(_fsesion().s)}
 function addSerieX(j){var x=_X()[j];x.reps=x.reps||[];x.reps.push(x.reps.length?x.reps[x.reps.length-1]:0);guardarBorr();vTr();setTimeout(function(){opX(j)},30)}
 function setX(j,campo,v){_X()[j][campo]=v;guardarBorr()}

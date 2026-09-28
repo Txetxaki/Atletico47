@@ -218,7 +218,7 @@ function sustituirHTML(orig,ids){var act=S.cfg.sustituye[orig],c=mismoPat(orig,i
  return '<div class="row"><label>Usar siempre</label><select class="inp" style="max-width:100%" onchange="sustituir(\''+orig+'\',this.value)"><option value="">'+(act?'volver a '+esc(LIB[orig].n):esc(LIB[orig].n)+' (el del plan)')+'</option>'
   +c.map(function(k){return '<option value="'+k+'"'+(act===k?' selected':'')+'>'+esc(LIB[k].n)+'</option>'}).join('')+'</select></div>'}
 function sustituir(orig,v){if(v)S.cfg.sustituye[orig]=v;else delete S.cfg.sustituye[orig];save();vTr();toast(v?'Desde ahora, '+LIB[v].n+' en lugar de '+LIB[orig].n:'Vuelve '+LIB[orig].n)}
-function op(i){var e=$('e'+i);if(!e)return;var o=e.classList.toggle('open');e.querySelector('.exhd').setAttribute('aria-expanded',o)}
+function op(i){var e=$('e'+i);if(!e)return;if(!e.classList.contains('open'))cerrarOtros(e);var o=e.classList.toggle('open');e.querySelector('.exhd').setAttribute('aria-expanded',o)}
 function bd(k){if(!borrador[k])borrador[k]={reps:[]};if(!borrador[k].reps)borrador[k].reps=[];return borrador[k]}
 function setRep(k,j,v){var b=bd(k);b.reps[j]=parseInt(v)||0;autoHecho(k);guardarBorr();progBar(sesionDe(cur,fechaSes||hoyISO()));
  var el=event.target.parentNode;el.classList.toggle('ok',!!parseInt(v));

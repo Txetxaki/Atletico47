@@ -59,6 +59,15 @@ header{border-bottom:1px solid var(--line);padding:18px 0 0;margin-bottom:20px}
 .kgb span{color:var(--dim)}
 .chev{color:var(--dim);font-size:11px;transition:transform .2s}
 .ex.open .chev{transform:rotate(90deg)}
+.exrow{display:flex;align-items:center}
+.exrow .exhd{flex:1;min-width:0;padding-left:10px}
+.exok{flex:0 0 auto;width:30px;height:30px;margin-left:14px;border-radius:50%;border:2px solid var(--line);color:transparent;font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center}
+.ex.done{border-color:var(--acc-dk)}
+.ex.done .exok{background:var(--acc);border-color:var(--acc);color:var(--ink)}
+.ex.done .name{color:var(--dim)}
+.item.okd .num{color:var(--acc);font-weight:700}
+.btn.rec{border-color:var(--red);color:var(--red)}
+.btn:disabled{opacity:.45}
 .body{display:none;padding:0 16px 16px;border-top:1px solid var(--line)}
 .ex.open .body{display:block}
 .why{background:rgba(255,180,71,.08);border-left:2px solid var(--acc);padding:9px 11px;font-size:13px;color:#D6DBE3;margin:13px 0}
@@ -207,6 +216,7 @@ footer{border-top:1px solid var(--line);margin-top:30px;padding:16px 0 24px;font
 <script src="storage-remote.js"></script>
 <script src="biblioteca.js"></script>
 <script src="motor.js"></script>
+<script src="extras.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

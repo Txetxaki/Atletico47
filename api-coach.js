@@ -1,17 +1,24 @@
 /* Atlético 47 — proxy del Coach
  *
- * La app NO habla con la API de Claude directamente: lo hace este proceso,
- * con la clave leída de coach.json (fuera de git) o de ANTHROPIC_API_KEY.
- * Así la clave nunca viaja al navegador ni vive en el HTML.
+ * La app NO habla con ninguna API de IA directamente: lo hace este proceso,
+ * con la clave leída de coach.json (fuera de git). La clave nunca viaja al
+ * navegador ni vive en el HTML ni en GitHub.
  *
- *   POST /api/coach   <- { messages: [{role, content}, ...] }
- *                     -> { texto }        200
- *                     -> { error }        503 si no hay clave, 502 si la API falla
+ *   GET  /api/coach/estado  -> { configurado, proveedor, modelo, error }
+ *   POST /api/coach         <- { messages: [{role:'user'|'assistant', content}] }
+ *                           -> { texto }   200
+ *                           -> { error }   503 sin configurar · 502 si la API falla
  *
- * Instalar la dependencia una vez en la Pi:  npm install   (usa package.json)
+ * coach.json admite dos proveedores:
  *
- * coach.json:
- *   { "clave": "sk-ant-...", "modelo": "claude-opus-5", "max_tokens": 1500 }
+ *   Anthropic (SDK oficial; npm install en la raíz):
+ *   { "proveedor": "anthropic", "clave": "sk-ant-...", "modelo": "claude-opus-5" }
+ *
+ *   Cualquier API compatible con OpenAI (MiniMax, OpenRouter, Groq, Ollama…), sin dependencias:
+ *   { "proveedor": "openai", "clave": "...", "modelo": "MiniMax-M2",
+ *     "url": "https://api.minimax.io/v1" }
+ *
+ * También vale ANTHROPIC_API_KEY en el entorno, que manda sobre coach.json.
  */
 
 const fs = require('fs');
@@ -24,10 +31,24 @@ const SYSTEM = 'Eres el coach de fuerza y salud de un hombre de 47 años con var
 function cfg() {
   let c = {};
   try { c = JSON.parse(fs.readFileSync(CFG, 'utf8')); } catch (_) {}
-  const clave = process.env.ANTHROPIC_API_KEY || c.clave;
-  return { clave, modelo: c.modelo || 'claude-opus-5', max_tokens: Number(c.max_tokens) || 1500 };
+  const env = process.env.ANTHROPIC_API_KEY;
+  const proveedor = env ? 'anthropic' : (c.proveedor || 'anthropic');
+  return {
+    proveedor,
+    clave: env || c.clave,
+    modelo: c.modelo || (proveedor === 'anthropic' ? 'claude-opus-5' : ''),
+    url: (c.url || '').replace(/\/+$/, ''),
+    max_tokens: Number(c.max_tokens) || 1500
+  };
 }
-function configurado() { return !!cfg().clave; }
+function estado() {
+  const c = cfg();
+  if (!c.clave) return { configurado: false, error: 'falta la clave en coach.json' };
+  if (c.proveedor === 'anthropic' && !sdk()) return { configurado: false, error: 'falta npm install (@anthropic-ai/sdk)' };
+  if (c.proveedor === 'openai' && (!c.url || !c.modelo)) return { configurado: false, error: 'faltan url o modelo en coach.json' };
+  return { configurado: true, proveedor: c.proveedor, modelo: c.modelo };
+}
+function configurado() { return estado().configurado; }
 
 function json(res, codigo, cuerpo) {
   const txt = JSON.stringify(cuerpo);
@@ -43,19 +64,40 @@ function leerCuerpo(req) {
   });
 }
 
-let Anthropic = null;
+let Anthropic = null, sdkProbado = false;
 function sdk() {
-  if (Anthropic) return Anthropic;
-  try { Anthropic = require('@anthropic-ai/sdk'); } catch (_) { Anthropic = null; }
+  if (!sdkProbado) { sdkProbado = true; try { Anthropic = require('@anthropic-ai/sdk'); } catch (_) { Anthropic = null; } }
   return Anthropic;
 }
 
-async function manejar(req, res) {
+async function preguntarAnthropic(c, messages) {
+  const client = new (sdk())({ apiKey: c.clave });
+  const r = await client.messages.create({ model: c.modelo, max_tokens: c.max_tokens, system: SYSTEM, messages });
+  if (r.stop_reason === 'refusal') return 'No puedo responder a eso. Si es una duda clínica, tu médico.';
+  return (r.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n');
+}
+
+async function preguntarOpenAI(c, messages) {
+  const ctrl = new AbortController();
+  const reloj = setTimeout(() => ctrl.abort(), 120000);
+  try {
+    const r = await fetch(c.url + '/chat/completions', {
+      method: 'POST', signal: ctrl.signal,
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + c.clave },
+      body: JSON.stringify({ model: c.modelo, max_tokens: c.max_tokens, messages: [{ role: 'system', content: SYSTEM }].concat(messages) })
+    });
+    if (!r.ok) { const e = new Error('HTTP ' + r.status); e.status = r.status; throw e; }
+    const d = await r.json();
+    const m = d.choices && d.choices[0] && d.choices[0].message;
+    return m ? (typeof m.content === 'string' ? m.content : (m.content || []).map(x => x.text || '').join('')) : '';
+  } finally { clearTimeout(reloj); }
+}
+
+async function manejar(req, res, ruta) {
+  if (ruta === '/api/coach/estado') return json(res, 200, estado());
   if (req.method !== 'POST') return json(res, 405, { error: 'metodo no permitido' });
-  const c = cfg();
-  if (!c.clave) return json(res, 503, { error: 'coach no configurado: falta la clave en coach.json' });
-  const SDK = sdk();
-  if (!SDK) return json(res, 503, { error: 'coach no configurado: falta npm install (@anthropic-ai/sdk)' });
+  const est = estado();
+  if (!est.configurado) return json(res, 503, { error: 'coach no configurado: ' + est.error });
 
   let cuerpo;
   try { cuerpo = JSON.parse(await leerCuerpo(req)); } catch (e) { return json(res, 400, { error: 'cuerpo no valido' }); }
@@ -65,24 +107,18 @@ async function manejar(req, res) {
     if ((m.role !== 'user' && m.role !== 'assistant') || typeof m.content !== 'string') return json(res, 400, { error: 'mensaje mal formado' });
   }
 
-  const client = new SDK({ apiKey: c.clave });
+  const c = cfg();
   try {
-    const r = await client.messages.create({
-      model: c.modelo,
-      max_tokens: c.max_tokens,
-      system: SYSTEM,
-      messages
-    });
-    if (r.stop_reason === 'refusal') return json(res, 200, { texto: 'No puedo responder a eso. Si es una duda clínica, tu médico.' });
-    const texto = (r.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n');
+    const texto = c.proveedor === 'anthropic' ? await preguntarAnthropic(c, messages) : await preguntarOpenAI(c, messages);
     return json(res, 200, { texto });
   } catch (e) {
     const status = e && e.status;
     console.error('coach:', status || '', e && e.message);
-    if (status === 401) return json(res, 502, { error: 'clave de API rechazada' });
+    if (status === 401 || status === 403) return json(res, 502, { error: 'clave de API rechazada' });
     if (status === 429) return json(res, 502, { error: 'límite de la API, prueba en un minuto' });
+    if (status === 404) return json(res, 502, { error: 'modelo o url no encontrados' });
     return json(res, 502, { error: 'la API no ha respondido' });
   }
 }
 
-module.exports = { manejar, configurado };
+module.exports = { manejar, configurado, estado };

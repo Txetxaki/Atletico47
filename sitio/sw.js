@@ -2,13 +2,14 @@
    Guarda la app para que funcione sin cobertura y recibe las notificaciones push.
    Antes de commitear cambios en sitio/, sube la versión: scripts/version-sw.sh */
 
-const CACHE = 'a47-v3';
+const CACHE = 'a47-v4';
 const ASSETS = [
   './',
   './index.html',
   './app.js',
   './motor.js',
   './biblioteca.js',
+  './extras.js',
   './storage-remote.js',
   './manifest.webmanifest',
   './icon-192.png',

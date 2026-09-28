@@ -1,5 +1,15 @@
 {
-  "clave": "sk-ant-PEGA-AQUI-LA-CLAVE-Y-GUARDA-COMO-coach.json",
+  "_comentario": "Copia este fichero como coach.json y rellena UNA de las dos opciones. coach.json está en .gitignore: nunca se sube.",
+
+  "proveedor": "anthropic",
+  "clave": "sk-ant-PEGA-AQUI-TU-CLAVE",
   "modelo": "claude-opus-5",
+
+  "_alternativa_openai_compatible": {
+    "proveedor": "openai",
+    "clave": "PEGA-AQUI-TU-CLAVE",
+    "modelo": "MiniMax-M2",
+    "url": "https://api.minimax.io/v1"
+  },
   "max_tokens": 1500
 }

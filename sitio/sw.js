@@ -2,13 +2,14 @@
    Guarda la app para que funcione sin cobertura y recibe las notificaciones push.
    Antes de commitear cambios en sitio/, sube la versión: scripts/version-sw.sh */
 
-const CACHE = 'og-v8';
+const CACHE = 'og-v9';
 const ASSETS = [
   './',
   './index.html',
   './app.js',
   './motor.js',
   './biblioteca.js',
+  './extras.js',
   './storage-remote.js',
   './manifest.webmanifest',
   './icon-192.png',

@@ -1,3 +1,19 @@
+/* Adaptador para extras.js (✓ por ejercicio, borrador persistente y extras):
+   en OsmaGym la jornada es el día de la semana y la clave del borrador, día+índice. */
+var EX={
+ jor:function(){return cur},
+ clave:function(i,j){return (j||cur)+i},
+ fecha:function(){return fechaCtx()},
+ sesion:function(f){return sesionDe(cur,f)},
+ ids:function(s){return ejerciciosHoy(s)},
+ top:function(id){return LIB[id].r[1]},
+ sesJor:function(j,f){return sesionDe(j,f)},
+ idsJor:function(s,f){return idsConRegen(s,f)},
+ legado:function(r,f,j){return r.dia===j||(!r.dia&&diaSemana(f)===j)},
+ campos:function(){return {}},
+ cabeceras:function(){return {'x-coach-code':(S.coachCfg&&S.coachCfg.codigo)||''}},
+ coachUrl:function(){return coachURL()}
+};
 /* OsmaGym — vistas y arranque
  *
  * Cada pestaña tiene su función vXxx() que pinta a partir de S (motor.js) y de
@@ -121,12 +137,12 @@ function diaSemHTML(k){
  var planOv=(S.plan||{})[f];
  if(planOv&&planOv.motivo)o+='<p class="err">'+esc(planOv.motivo)+'</p>';
  if(q.tipo==='fuerza'){
-  var s=sesionDe(k,f),a=ajustesDe(f),idsD=idsConRegen(s,f);
-  o+='<div class="hmeta" style="margin-bottom:8px"><span>'+s.n+' · '+s.s+'</span><span>'+s.ej.length+' ejercicios</span></div>';
+  var s=sesionDe(k,f),a=ajustesDe(f),idsD=idsConRegen(s,f),est=estadoDia(k,f);
+  o+='<div class="hmeta" style="margin-bottom:8px"><span>'+s.n+' · '+s.s+'</span><span>'+(est.hechos?est.hechos+' de '+est.tot+' hechos':s.ej.length+' ejercicios')+'</span></div>';
   o+='<p class="cue" style="padding-top:0;color:var(--acc)">Hoy tocan: '+esc(musculosSesionTxt(idsD))+'</p>';
   if(a.avisos.length)o+='<p class="err">'+a.avisos.map(esc).join(' ')+'</p>';
   o+='<div class="eq" style="margin:0 0 10px">'+idsD.map(function(id,i){var L=LIB[id],sg=sugerir(id,f),n=seriesDe(id,f);
-   return '<div class="item"><span class="num">'+(i+1<10?'0':'')+(i+1)+'</span><label>'+esc(L.n)+'</label><span class="q">'+n+'×'+(L.r[0]===L.r[1]?L.r[0]:L.r[0]+'-'+L.r[1])+(L.seg?'s':'')+(sg.peso?' · '+sg.peso+' kg':'')+'</span></div>'}).join('')+'</div>';
+   return '<div class="item'+(est.m[i]?' okd':'')+'"><span class="num">'+(est.m[i]?'✓':(i+1<10?'0':'')+(i+1))+'</span><label>'+esc(L.n)+'</label><span class="q">'+n+'×'+(L.r[0]===L.r[1]?L.r[0]:L.r[0]+'-'+L.r[1])+(L.seg?'s':'')+(sg.peso?' · '+sg.peso+' kg':'')+'</span></div>'}).join('')+'</div>';
   var r=sesDe(f);
   o+='<div class="row">'+(r?'<span class="mkcal">guardada'+(r.s.val?' y validada':'')+'</span>':'')+'<button class="btn gh sm" onclick="pick(\''+k+'\');vw(\'tr\')">Abrir en Entreno</button></div>';
  } else if(q.tipo==='padel'){
@@ -138,6 +154,7 @@ function diaSemHTML(k){
   o+='<div class="eq" style="margin:0 0 10px">'+rutinaMov().map(function(m){return '<div class="item"><label>'+esc(m.n)+'</label><span class="q">'+m.seg+' s</span></div>'}).join('')+'</div>';
   o+='<div class="row">'+(S.movil.indexOf(f)>=0?'<span class="mkcal">hecha</span>':'')+'<button class="btn gh sm" onclick="empezarMovil()">Empezar los 8 minutos</button></div>';
  }
+ var ex=estadoDia(k,f);if(ex.xn.length)o+='<p class="mkcal" style="margin-top:6px">Extra: '+esc(ex.xn.join(', '))+'</p>';
  return o+'</div>';
 }
 function guardarHoy(){
@@ -154,7 +171,7 @@ function empezarMovil(){
 
 /* ============ ENTRENO ============ */
 var cur=diaSemana(hoyISO()),borrador={},fechaSes=null;
-function pick(k){cur=k;borrador={};vTr();window.scrollTo({top:0,behavior:'smooth'})}
+function pick(k){cur=k;cargarBorr();vTr();window.scrollTo({top:0,behavior:'smooth'})}
 /* fecha con la que trabaja Entreno: la elegida a mano en el selector de fecha (fechaSes, siempre
    hoy o pasada), o si no, la fecha real del día de la semana que se está viendo (cur). Así, si se
    elige un día futuro de esta semana en el selector de días, todo (regen, ajustes, guardado) usa
@@ -182,7 +199,7 @@ function regenerar(i){
  if(!cand.length){toast('No hay otra opción para este músculo con tu material',1);return}
  S.regen=S.regen||{};S.regen[f]=S.regen[f]||{};
  var actual=S.regen[f][i],idx=actual?cand.indexOf(actual):-1,next=cand[(idx+1+cand.length)%cand.length];
- S.regen[f][i]=next;delete borrador[cur+i];save();
+ S.regen[f][i]=next;delete borrador[cur+i];guardarBorr();save();
  toast('Cambiado a '+LIB[next].n+'. Trabaja '+musculosSesionTxt([next])+'.');
  vTr();setTimeout(function(){op(i)},50);
 }
@@ -199,7 +216,7 @@ function regenerarDia(){
   });
   S.regen=S.regen||{};S.regen[f]={};
   nuevos.forEach(function(id,i){if(id!==s.ej[i])S.regen[f][i]=id});
-  borrador={};save();
+  borrador={};if(S.borr)delete S.borr[borrKey()];save();
   toast(sinAlt.length?'Día regenerado. Sin alternativa para: '+sinAlt.join(', '):'Día regenerado. Hoy tocan: '+musculosSesionTxt(idsConRegen(s,f)));
   vTr();
  };
@@ -235,11 +252,12 @@ function regenerarSemana(){
     if(cand.length)nuevos[i]=cand[0];else sinAlt.push(LIB[baseId]?LIB[baseId].n:baseId);
    });
    S.regen=S.regen||{};S.regen[x.f]={};
+   if(S.borr)delete S.borr[x.f+'|'+x.dia];
    nuevos.forEach(function(id,i){if(id!==s.ej[i])S.regen[x.f][i]=id});
    resumen.push(fmtF(x.f)+': '+musculosSesionTxt(idsConRegen(s,x.f)));
    sinAltTotal=sinAltTotal.concat(sinAlt);
   });
-  borrador={};save();
+  borrador={};if(S.borr)delete S.borr[borrKey()];save();
   var sinAltU=sinAltTotal.filter(function(v,i,a){return a.indexOf(v)===i});
   toast((sinAltU.length?'Sin alternativa para: '+sinAltU.join(', ')+'. ':'')+'Semana regenerada. '+resumen.join(' · '));
   refrescar();
@@ -250,7 +268,7 @@ function vTr(){
  var f=fechaCtx();
  if($('btnRestaurarSemana'))$('btnRestaurarSemana').hidden=!haySemanaAjustada();
  $('days').innerHTML=DIAS.map(function(k){var kf=fechaDeDia(k),q=queToca(k,kf),ov=(S.plan||{})[kf];
-  return '<button class="day'+(q.tipo!=='fuerza'?' rest':'')+'"'+(ov?' style="border-color:var(--warn)" title="'+esc(ov.motivo||'Ajustado esta semana')+'"':'')+' aria-pressed="'+(k===cur)+'" onclick="pick(\''+k+'\')"><span class="d">'+DIAL[k]+'</span><span class="l">'+(q.tipo==='fuerza'?q.k:(q.tipo==='padel'?'pádel':'movil'))+(ov?' ↻':'')+'</span></button>'}).join('');
+  return '<button class="day'+(q.tipo!=='fuerza'?' rest':'')+'"'+(ov?' style="border-color:var(--warn)" title="'+esc(ov.motivo||'Ajustado esta semana')+'"':'')+' aria-pressed="'+(k===cur)+'" onclick="pick(\''+k+'\')"><span class="d">'+DIAL[k]+'</span><span class="l">'+(marcaDia(k,kf)||(q.tipo==='fuerza'?q.k:(q.tipo==='padel'?'pádel':'movil')))+(ov?' ↻':'')+'</span></button>'}).join('');
  var s=sesionDe(cur,f),m=$('main'),q=queToca(cur,f);
  $('when').textContent='Semana '+S.semana+(esDeload()?' · DESCARGA':'');
  if(!s){
@@ -259,8 +277,8 @@ function vTr(){
   var planOv=(S.plan||{})[f];
   m.innerHTML='<div class="rest-day"><h3 style="font-size:19px;color:var(--dim)">Hoy no toca hierro</h3><p>'+(q.tipo==='padel'?'Calentamiento y registro del partido en la pestaña Pádel.':'8 minutos de movilidad desde Hoy. Bici suave si te apetece.')+'</p>'
   +(planOv&&planOv.motivo?nota('<b>Ajuste de la semana</b>'+esc(planOv.motivo),'w'):'')
-  +'<div class="row" style="margin-top:14px"><button class="btn gh sm" onclick="fuerzaExtra()">Entrenar fuerza igualmente</button></div></div>';
-  $('prog').style.width='0';return;}
+  +'<div class="row" style="margin-top:14px"><button class="btn gh sm" onclick="fuerzaExtra()">Entrenar fuerza igualmente</button></div></div>'+extrasHTML(true);
+  progBar(null);return;}
  var a=ajustesDe(f),ids=ejerciciosHoy(s),html='';
  $('tt').textContent=s.n;$('ss').innerHTML=esc(s.s)+'<br><span style="color:var(--acc)">Hoy tocan: '+esc(musculosSesionTxt(ids))+'</span>';
  if($('regenRow'))$('regenRow').hidden=false;
@@ -275,9 +293,10 @@ function vTr(){
   var regHoy=(S.regen&&S.regen[f])||{};
   var cambiado=b.cambio?'<span class="chip" style="color:var(--warn);border-color:var(--warn)">cambiado</span>':(regHoy[i]!==undefined?'<span class="chip" style="color:var(--ok);border-color:var(--ok)">regenerado</span>':(id!==s.ej[i]?'<span class="chip">ajustado</span>':''));
   var alt=alternativa(id,ids);
-  return '<article class="ex" id="e'+i+'">'
+  var hh=hechoB(b,nS);
+  return '<article class="ex'+(hh?' done':'')+'" id="e'+i+'"><div class="exrow"><button class="exok" onclick="toggleHecho('+i+')" aria-label="Marcar hecho" aria-pressed="'+hh+'">✓</button>'
   +'<button class="exhd" onclick="op('+i+')" aria-expanded="false"><span class="num">'+(i+1<10?'0':'')+(i+1)+'</span><span class="name">'+esc(L.n)+cambiado+'<br>'+musculosHTML(id)+'</span>'
-  +'<span class="kgb"><b>'+(sg.peso?sg.peso+' kg':'sin peso')+'</b><span>'+nS+'×'+(L.r[0]===L.r[1]?L.r[0]:L.r[0]+'-'+L.r[1])+(L.seg?'s':'')+'</span></span><span class="chev">▶</span></button>'
+  +'<span class="kgb"><b>'+(sg.peso?sg.peso+' kg':'sin peso')+'</b><span>'+nS+'×'+(L.r[0]===L.r[1]?L.r[0]:L.r[0]+'-'+L.r[1])+(L.seg?'s':'')+'</span></span><span class="chev">▶</span></button></div>'
   +'<div class="body">'
   +'<div class="why"><b>Por qué este peso:</b> '+esc(sg.txt)+'</div>'
   +'<p class="discos">Montaje: '+esc(discos(sg.peso,id))+'</p>'
@@ -295,13 +314,15 @@ function vTr(){
   +'<label>RPE</label><select class="inp" onchange="setRpe(\''+cur+i+'\',this.value)"><option value="">–</option>'
   +[5,6,7,8,9].map(function(r){return '<option value="'+r+'"'+(b.rpe==r?' selected':'')+'>'+r+'</option>'}).join('')+'</select></div>'
   +'<input class="nota" placeholder="Nota: molestias, sensaciones, lo que sea" value="'+esc(b.nota||'')+'" oninput="setNota(\''+cur+i+'\',this.value)">'
+  +'<div class="row" style="margin-top:10px"><button class="btn sm exhecho" onclick="toggleHecho('+i+')">'+(hh?'Desmarcar':'Hecho')+'</button></div>'
   +'</div></article>'}).join('');
+ html+=extrasHTML(false);
  var esHoy=(f===hoyISO()),esFuturo=(f>hoyISO());
  html+='<div class="row" style="margin-top:20px"><label>Día</label><input class="inp" type="date" value="'+f+'" max="'+hoyISO()+'" onchange="setFecha(this.value)">'
  +(esHoy?'<span class="mkcal">hoy</span>':(esFuturo?'<span class="mkcal">'+fmtF(f)+'</span>':'<span class="mkcal" style="color:var(--warn)">retroactivo</span>'))+'</div>';
- html+='<div class="row"><button class="btn" onclick="guardarSesion()">Guardar sesión</button><button class="btn gh sm" onclick="talCual()">Rellenar tal cual</button><button class="btn gh sm" onclick="limpiar()">Limpiar</button></div>';
+ html+='<div class="row"><button class="btn" onclick="guardarSesion()">Guardar sesión</button><span class="mkcal" id="progTxt"></span><button class="btn gh sm" onclick="talCual()">Rellenar tal cual</button><button class="btn gh sm" onclick="limpiar()">Limpiar</button></div>';
  html+=nota('<b>Me duele</b>Cada ejercicio tiene una alternativa a un toque. Si algo duele, cámbialo y sigue: queda apuntado en la sesión. Si el dolor se repite dos sesiones, márcalo en Ajustes como articulación en fase mala y el motor lo saca del plan hasta que lo desmarques.');
- html+=nota('<b>Si lo hiciste tal cual</b>Dale a Guardar sin escribir nada y doy por hecho que seguiste el plan: peso propuesto, tope de repeticiones y RPE 7. Si un ejercicio fue distinto, escribe solo ese.');
+ html+=nota('<b>Hecho y sin hacer</b>Marca cada ejercicio con ✓ al terminarlo, o apunta sus series y se marca solo. Al guardar, lo que no esté marcado queda como <i>sin hacer</i>. Si no marcas nada, doy por hecho el plan entero: peso propuesto, tope de repeticiones y RPE 7.');
  m.innerHTML=html;progBar(s);
 }
 /* «usar siempre X en lugar de Y»: sustitución permanente que el motor aplica en cada sesión */
@@ -309,54 +330,46 @@ function sustituirHTML(orig,ids){var act=S.cfg.sustituye[orig],c=mismoPat(orig,i
  if(!c.length&&!act)return '';
  return '<div class="row"><label>Usar siempre</label><select class="inp" style="max-width:100%" onchange="sustituir(\''+orig+'\',this.value)"><option value="">'+(act?'volver a '+esc(LIB[orig].n):esc(LIB[orig].n)+' (el del plan)')+'</option>'
   +c.map(function(k){return '<option value="'+k+'"'+(act===k?' selected':'')+'>'+esc(LIB[k].n)+'</option>'}).join('')+'</select></div>'}
-function sustituir(orig,v){if(v)S.cfg.sustituye[orig]=v;else delete S.cfg.sustituye[orig];save();borrador={};vTr();toast(v?'Desde ahora, '+LIB[v].n+' en lugar de '+LIB[orig].n:'Vuelve '+LIB[orig].n)}
-function op(i){var e=$('e'+i);if(!e)return;var o=e.classList.toggle('open');e.querySelector('.exhd').setAttribute('aria-expanded',o)}
+function sustituir(orig,v){if(v)S.cfg.sustituye[orig]=v;else delete S.cfg.sustituye[orig];save();vTr();toast(v?'Desde ahora, '+LIB[v].n+' en lugar de '+LIB[orig].n:'Vuelve '+LIB[orig].n)}
+function op(i){var e=$('e'+i);if(!e)return;if(!e.classList.contains('open'))cerrarOtros(e);var o=e.classList.toggle('open');e.querySelector('.exhd').setAttribute('aria-expanded',o)}
 function bd(k){if(!borrador[k])borrador[k]={reps:[]};if(!borrador[k].reps)borrador[k].reps=[];return borrador[k]}
-function setRep(k,j,v){var b=bd(k);b.reps[j]=parseInt(v)||0;progBar(sesionDe(cur,fechaCtx()));
+function setRep(k,j,v){var b=bd(k);b.reps[j]=parseInt(v)||0;autoHecho(k);guardarBorr();progBar(sesionDe(cur,fechaCtx()));
  var el=event.target.parentNode;el.classList.toggle('ok',!!parseInt(v));
  if(parseInt(v))startT(descansoDe(parseInt(k.slice(3))));}
-function setPeso(k,v){bd(k).peso=parseFloat(v)||0}
-function setRpe(k,v){bd(k).rpe=parseInt(v)||0}
-function setNota(k,v){bd(k).nota=v}
+function setPeso(k,v){bd(k).peso=parseFloat(v)||0;guardarBorr()}
+function setRpe(k,v){bd(k).rpe=parseInt(v)||0;guardarBorr()}
+function setNota(k,v){bd(k).nota=v;guardarBorr()}
 function meDuele(i){var s=sesionDe(cur,fechaCtx()),ids=ejerciciosHoy(s),id=ids[i],alt=alternativa(id,ids);
- if(!alt)return;var b=bd(cur+i);b.cambio={de:s.ej[i],por:alt};b.reps=[];b.peso=undefined;
+ if(!alt)return;var b=bd(cur+i);b.cambio={de:s.ej[i],por:alt};b.reps=[];b.peso=undefined;delete b.hecho;guardarBorr();
  toast('Cambiado a '+LIB[alt].n+'. Queda apuntado.');vTr();
  setTimeout(function(){op(i)},50)}
-function deshacerCambio(i){var b=bd(cur+i);delete b.cambio;b.reps=[];b.peso=undefined;vTr()}
-function progBar(s){if(!s)return;var t=0,d=0,f=fechaCtx();
- ejerciciosHoy(s).forEach(function(id,i){t+=seriesDe(id,f);var b=borrador[cur+i];if(b&&b.reps)b.reps.forEach(function(r){if(r>0)d++})});
- $('prog').style.width=(t?d/t*100:0)+'%';}
-function setFecha(v){fechaSes=v||hoyISO();cur=diaSemana(fechaSes);borrador={};vTr();toast(fechaSes===hoyISO()?'Se guardará con fecha de hoy':'Se guardará con fecha '+fmtF(fechaSes))}
+function deshacerCambio(i){var b=bd(cur+i);delete b.cambio;b.reps=[];b.peso=undefined;delete b.hecho;guardarBorr();vTr()}
+function setFecha(v){fechaSes=v||hoyISO();cur=diaSemana(fechaSes);cargarBorr();vTr();toast(fechaSes===hoyISO()?'Se guardará con fecha de hoy':'Se guardará con fecha '+fmtF(fechaSes))}
 function talCual(){var f=fechaCtx(),s=sesionDe(cur,f);if(!s)return;
  ejerciciosHoy(s).forEach(function(id,i){var L=LIB[id],sg=sugerir(id,f),b=bd(cur+i),n=seriesDe(id,f);
   for(var j=0;j<n;j++)if(!b.reps[j])b.reps[j]=L.r[1];
   if(b.peso===undefined)b.peso=sg.peso;if(!b.rpe)b.rpe=7});
- vTr();toast('Rellenado con el plan. Cambia lo que fuera distinto.')}
-function limpiar(){pregunta('¿Borrar lo que has apuntado hoy?',function(){borrador={};vTr();toast('Borrado')})}
+ guardarBorr();vTr();toast('Rellenado con el plan. Cambia lo que fuera distinto.')}
+function limpiar(){pregunta('¿Borrar lo que has apuntado hoy?',function(){if(S.borr)delete S.borr[borrKey()];borrador={};save();vTr();toast('Borrado')})}
 function guardarSesion(){
- var f=fechaCtx(),s=sesionDe(cur,f);if(!s)return;
+ var f=fechaCtx(),s=sesionDe(cur,f),c=construirEj(s,f);
+ if(!c.ej.length){toast('Nada que guardar: marca algo como hecho o añade un extra',1);return}
  var eraExtra=tipoBase(cur,f).tipo!=='fuerza';
- var ids=ejerciciosHoy(s),ej=[],asumidos=0;
- ids.forEach(function(id,i){
-  var L=LIB[id],b=borrador[cur+i]||{},sg=sugerir(id,f),reps=(b.reps||[]).filter(function(r){return r>0}),auto=0;
-  if(!reps.length){var n=seriesDe(id,f);reps=[];for(var j=0;j<n;j++)reps.push(L.r[1]);auto=1;asumidos++}
-  ej.push({id:id,peso:b.peso!==undefined?b.peso:sg.peso,reps:reps,rpe:b.rpe||7,nota:b.nota||'',auto:auto,cambio:b.cambio||null});
- });
- var reg={f:f,s:s.k,sem:S.semana,ej:ej,val:0,auto:asumidos,listo:dispDe(f)};
+ var reg={f:f,s:s?s.k:'X',dia:cur,jor:cur,sem:S.semana,ej:c.ej,omit:c.omit,val:0,auto:c.asumidos,listo:dispDe(f)};
  var prev=sesDe(f);if(prev)S.hist[prev.i]=reg;else S.hist.push(reg);
  S.hist.sort(function(a,b){return a.f<b.f?-1:1});
- save();borrador={};fechaSes=null;
- if(eraExtra)revisarReplan(f,'fuerza_extra',{k:s.k});else revisarReplan(f,'sesion',{});
+ if(S.borr)delete S.borr[borrKey()];clearTimeout(_tBorr);save();fechaSes=null;
+ if(s){if(eraExtra)revisarReplan(f,'fuerza_extra',{k:s.k});else revisarReplan(f,'sesion',{});}
  revisarCoachDiario('sesion');
- toast(asumidos===ej.length?'Guardada tal cual: '+ej.length+' ejercicios al plan':(asumidos?'Guardada. '+asumidos+' asumidos al plan':'Sesión guardada'));
- cur=diaSemana(hoyISO());vTr();
+ toast(resumenGuardado(c,f));
+ cur=diaSemana(hoyISO());cargarBorr();vTr();
 }
 /* fuerza el día actual a sesión de fuerza aunque el plan no lo pida hoy; el motor
    reajusta el resto de la semana en cuanto se guarda la sesión (ver guardarSesion). */
 function fuerzaExtra(){
  var f=fechaCtx(),letra=proximaLetraExtra(f);
  S.plan=S.plan||{};S.plan[f]={tipo:'fuerza',k:letra,motivo:'Fuerza fuera de plan, elegida a mano.',auto:0};
- save();borrador={};vTr();
+ save();vTr();
  toast('Sesión de fuerza '+letra+' añadida hoy. Al guardarla, se ajusta el resto de la semana.');
 }
 
@@ -382,12 +395,12 @@ function calendario(){
 function verDia(f){
  var r=sesDe(f);if(!r)return;
  var t=r.s.ej.map(function(e){var L=LIB[e.id];
-  return esc(L?L.n:e.id)+': '+(e.peso?e.peso+' kg × ':'')+e.reps.join('-')+' (RPE '+e.rpe+')'+(e.auto?' · tal cual':'')+(e.cambio?' · cambiado por dolor':'')+(e.nota?' — '+esc(e.nota):'')}).join('\n');
+  return esc(lineaEj(e))+(e.auto?' · tal cual':'')+(e.cambio?' · cambiado por dolor':'')+(e.nota?' — '+esc(e.nota):'')}).join('\n');
  var vol=0;r.s.ej.forEach(function(e){vol+=(e.peso||0)*sum(e.reps)});
  var l=r.s.listo?' · rodillas '+r.s.listo.rod+'/10'+(r.s.listo.sue!=null?', '+r.s.listo.sue+' h':''):'';
  $('detDia').innerHTML='<div class="hist"><h4>'+fmtF(f)+' · Sesión '+r.s.s+(r.s.val?' · validada':'')+'</h4>'
  +'<div class="hmeta" style="margin-bottom:10px"><span>'+r.s.ej.length+' ejercicios'+l+'</span><span>'+Math.round(vol)+' kg movidos</span></div>'
- +'<pre class="pre">'+t+'</pre>'
+ +'<pre class="pre">'+t+'</pre>'+(r.s.omit&&r.s.omit.length?'<p class="err" style="padding-top:8px">Sin hacer: '+esc(r.s.omit.map(function(id){return (LIB[id]||{}).n||id}).join(', '))+'</p>':'')
  +'<div class="row" style="margin-top:14px">'+(r.s.val?'<button class="btn gh sm" onclick="valDia('+r.i+',0)">Quitar validación</button>':'<button class="btn sm" onclick="valDia('+r.i+',1)">Validar</button>')
  +'<button class="btn gh sm rojo" onclick="borrarDia('+r.i+')">Borrar sesión</button></div></div>';
  $('detDia').scrollIntoView({behavior:'smooth',block:'nearest'});
@@ -619,7 +632,7 @@ function contexto(){
   var lim4sem=diasAtras(28),recientes=S.hist.filter(function(x){return x.f>=lim4sem});
   if(!recientes.length)recientes=S.hist.slice(-8);
   t.push('HISTORIAL DE FUERZA ('+S.hist.length+' sesiones en total; aquí las últimas 4 semanas, '+recientes.length+'):');
-  recientes.forEach(function(x){t.push(x.f+' ['+x.s+', sem '+x.sem+(x.val?', validada':'')+(x.listo?', rodillas '+x.listo.rod+'/10':'')+']: '+x.ej.map(function(q){var L=LIB[q.id],m=musculosDe(q.id)[0];return (L?L.n:q.id)+(m?' ('+(MUSC[m]||m)+')':'')+' '+(q.peso||0)+'kg '+q.reps.join('-')+' RPE'+q.rpe+(q.auto?' [asumido]':'')+(q.cambio?' [cambiado por dolor desde '+(LIB[q.cambio.de]||{}).n+']':'')+(q.nota?' ("'+q.nota+'")':'')}).join(' | '))});
+  recientes.forEach(function(x){t.push(x.f+' ['+x.s+', sem '+x.sem+(x.val?', validada':'')+(x.listo?', rodillas '+x.listo.rod+'/10':'')+']: '+x.ej.map(function(q){var L=LIB[q.id],m=musculosDe(q.id)[0];return nombreEj(q)+(m?' ('+(MUSC[m]||m)+')':'')+(q.extra?' [EXTRA]':'')+' '+(q.min?q.min+'min':(q.peso||0)+'kg '+(q.reps||[]).join('-')+' RPE'+q.rpe)+(q.auto?' [asumido]':'')+(q.cambio?' [cambiado por dolor desde '+(LIB[q.cambio.de]||{}).n+']':'')+(q.nota?' ("'+q.nota+'")':'')}).join(' | ')+(x.omit&&x.omit.length?' | SIN HACER: '+x.omit.map(function(id){return (LIB[id]||{}).n||id}).join(', '):''))});
  } else t.push('HISTORIAL DE FUERZA: todavía no hay sesiones guardadas.');
  if(S.padel.length)t.push('PÁDEL (últimos 10): '+S.padel.slice(-10).map(function(p){return p.f+' '+p.min+'min int'+p.int+' rodillas '+p.rodD+'/'+p.rodI+' codo '+p.codo+(p.hielo?' hielo':'')+(p.nota?' ("'+p.nota+'")':'')}).join(' | '));
  if(S.cuerpo.length)t.push('CUERPO (registro semanal, últimos 10): '+S.cuerpo.slice(-10).map(function(c){return c.f+': peso '+(c.peso||'?')+', cintura '+(c.cint||'?')+', dolor RD'+c.rodD+' RI'+c.rodI+' muñ'+c.mun+' cad'+c.cad+', sueño '+(c.sueN||'?')+'+'+(c.sueS||0)+'h'+(c.cig!=null?', '+c.cig+' cig':'')+(c.sis?', TA '+c.sis+'/'+c.dia:'')}).join(' | '));
@@ -858,6 +871,7 @@ function copiarSub(){if(!S.push||!S.push.sub)return;navigator.clipboard.writeTex
 /* ============ ARRANQUE ============ */
 load(function(){
  $('app').remove();
+ cargarBorr();
  $('today').textContent=new Date().toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'}).toUpperCase();
  $('foot').textContent='Semana '+S.semana+' · '+S.hist.length+' sesiones · '+S.padel.length+' partidos · descarga cada 5 semanas';
  revisarDiasPerdidos();

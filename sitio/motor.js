@@ -315,7 +315,7 @@ function rachaMovil(){ // días seguidos con movilidad hecha, contando hoy o aye
  return n;}
 function cargaSemana(){ // carga combinada de la semana natural actual
  var w=semanaNat(hoyISO()),fz=0,pm=0,pn=0;
- S.hist.forEach(function(s){if(semanaNat(s.f)===w)fz++});
+ S.hist.forEach(function(s){if(semanaNat(s.f)===w&&s.s!=='X')fz++});
  S.padel.forEach(function(p){if(semanaNat(p.f)===w){pn++;pm+=p.min||0}});
  return {fuerza:fz,partidos:pn,minutos:pm};
 }

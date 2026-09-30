@@ -12,7 +12,7 @@ set -euo pipefail
 
 BASE="/home/txetxaki/atletico47"
 URL_LOCAL="http://127.0.0.1:8091"
-ARCHIVOS=(index.html app.js motor.js biblioteca.js sw.js manifest.webmanifest storage-remote.js migrar.html
+ARCHIVOS=(index.html app.js motor.js biblioteca.js extras.js sw.js manifest.webmanifest storage-remote.js migrar.html
           icon-192.png icon-512.png icon-maskable.png apple-touch-icon.png)
 
 cd "$BASE"

@@ -56,6 +56,7 @@ historial. Tampoco cambian las unidades systemd (`atletico47-web.service` y
 | `sitio/biblioteca.js` | Ejercicios, plantillas A/B, movilidad, calentamiento de pádel, comida |
 | `sitio/motor.js` | Estado, persistencia, qué toca cada día, disponibilidad, ajustes diarios, progresión, alertas |
 | `sitio/app.js` | Las ocho pestañas y el arranque |
+| `sitio/extras.js` | Hecho por ejercicio, borrador persistente y extras por texto o voz (común con TxeGym y WenGym) |
 | `sitio/storage-remote.js` | Puente `window.storage`: sincroniza `localStorage` con la Pi (clave `a47v1`) |
 | `sitio/sw.js` | Service worker: caché sin conexión y recepción de push |
 | `sitio/migrar.html` | Mueve el blob de un origen a otro |
@@ -82,6 +83,16 @@ historial. Tampoco cambian las unidades systemd (`atletico47-web.service` y
 | **Comida** | **Diario de lo que ha comido de verdad** (momento, qué, en plan o no), «mis platos» para apuntar rápido, menú de referencia por tipo de día, cenas de emergencia, lista de la compra | Lo que decide la barriga es lo que come, no lo que debería; el Coach lee el diario |
 | **Coach** | Chat con perfil, lesiones, reglas duras e historial completo. Puede ajustar el plan él solo (ver más abajo) | La clave vive en el servidor, no en el HTML |
 | **Ajustes** | Días de pádel y fuerza, hora del partido, descansos, **articulaciones en fase mala**, **sustituciones permanentes**, material (incluido el propio), **ejercicios propios** con material y alternativa, **movilidad editable**, objetivos de comida, push, copia de seguridad | Que el plan cambie sin tocar código |
+
+## Hecho, sin hacer y extras
+
+- **✓ en cada ejercicio.** Se marca al terminarlo, o solo al rellenar todas sus series. Al marcarlo se cierra y se abre el siguiente pendiente.
+- **Lo apuntado no se pierde.** Cada jornada tiene su borrador guardado al momento en `S.borr`; cerrar la app o cambiar de pestaña no borra nada. Al reabrir una jornada ya guardada se ve qué se hizo.
+- **Desde fuera.** La tira de jornadas muestra `x/y` o `✓`; Progreso dice qué quedó **sin hacer** en cada sesión; el Coach también lo ve.
+- **Regla al guardar.** Si no has tocado nada, se asume el plan entero, como antes. Si has marcado o apuntado algo del plan, lo no marcado queda como *sin hacer*.
+- **Algo más.** Caja de texto con botón **Dictar** (reconocimiento de voz del propio navegador; no se guarda audio). Lo escrito se interpreta con la IA del Coach si está configurada y, si no, con un intérprete local que entiende `3x12`, `3 series de 10`, `8 kilos`, `15 minutos`, `40 segundos`. Cada cosa entendida se convierte en una tarjeta **extra** editable dentro de la sesión; también se puede elegir un ejercicio de la lista. Los días sin fuerza se guarda como sesión `X`, que no cuenta como sesión de fuerza.
+- El código es común a TxeGym, OsmaGym y WenGym: `sitio/extras.js`. Cada app declara al principio de su `app.js` un adaptador `EX` con su forma de nombrar las jornadas. OsmaGym usa además dos ganchos opcionales: `EX.fecha()` (la fecha real del día elegido, `fechaCtx()`) y `EX.coachUrl()` (en github.io la IA va a Vercel).
+- **Regenerar** un ejercicio borra solo lo apuntado en ese hueco; regenerar el día o la semana borra el borrador de esos días.
 
 ## Qué decide el motor
 

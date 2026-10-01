@@ -23,6 +23,7 @@ function rutaAuditoria(env) {
 
 async function pedir(ctx, ruta, init) {
   const res = await ctx.fetchFn(ctx.base + ruta, Object.assign({ signal: AbortSignal.timeout(TIMEOUT_MS) }, init));
+  if (res.status === 404 && /\/api\/estado\//.test(ruta)) throw new Error('todavia no hay datos de OsmaGym sincronizados en la Pi: la app aun no ha subido su estado (abrela con Tailscale activo)');
   if (!res.ok) throw new Error('la API de OsmaGym respondio ' + res.status);
   return res.json();
 }

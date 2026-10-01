@@ -32,8 +32,8 @@
 
   /* Solo se admiten destinos de la tailnet o de la red local: un override no puede sacar los datos a internet. */
   function hostPrivado(url) {
-    var m = /^https?:\/\/([^/:]+)/i.exec(url);
-    var host = m ? m[1].toLowerCase() : '';
+    var host;
+    try { host = new URL(url).hostname.toLowerCase(); } catch (e) { return false; }
     return host === 'localhost' || /\.ts\.net$/.test(host) || /^(127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(host);
   }
 
@@ -43,9 +43,7 @@
     if (typeof ov === 'string' && /^https?:\/\/[^\s/]+/i.test(ov) && hostPrivado(ov)) return ov.replace(/\/+$/, '');
     var origen = o.origin || '';
     if (origen === o.piUrl) return '';
-    var m = /^https?:\/\/([^/:]+)/i.exec(origen);
-    var host = m ? m[1].toLowerCase() : '';
-    if (host === 'localhost' || /\.ts\.net$/.test(host) || /^(127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(host)) return '';
+    if (hostPrivado(origen)) return '';
     return o.piUrl;
   }
 

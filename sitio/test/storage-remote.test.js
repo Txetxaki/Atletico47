@@ -47,3 +47,11 @@ test('decidirSonda: a fresh negative result is reused for 2 minutes, never block
 test('decidirSonda: a timestamp from the future is distrusted', () => {
   assert.equal(R.decidirSonda({ ok: true, ts: 5000 }, 1000), 'sondar');
 });
+
+test('elegirBase: hosts hidden in userinfo, query or fragment do not pass as private', () => {
+  const origin = 'https://example.vercel.app';
+  for (const ov of ['https://evil.example.com#.ts.net', 'https://evil.example.com?x=.ts.net', 'https://x.ts.net@evil.example.com/', 'https://evil.example.com\\@x.ts.net']) {
+    assert.equal(R.elegirBase({ origin, piUrl: PI, override: ov }), PI, 'userinfo or fragment: ' + ov);
+  }
+  assert.equal(R.elegirBase({ origin, piUrl: PI, override: 'https://raspberry.taile8249e.ts.net:10009/' }), 'https://raspberry.taile8249e.ts.net:10009');
+});

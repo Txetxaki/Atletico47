@@ -147,3 +147,25 @@ test('resumenGeneral: empty state does not throw', () => {
   assert.equal(r.semanaActual.length, 7);
   assert.deepEqual(r.avisos, []);
 });
+
+test('sincronizacion: how fresh the Pi copy is, in Spanish, stale after 36 h', () => {
+  const H = 3600000, ahora = Date.UTC(2026, 9, 1, 12, 0, 0);
+  assert.deepEqual(A.sincronizacion({ actualizado: ahora - 3 * H, dispositivo: 'movil-abc' }, ahora),
+    { actualizado: '2026-10-01T09:00:00.000Z', dispositivo: 'movil-abc', hace: 'hace 3 h', obsoleta: false });
+  assert.equal(A.sincronizacion({ actualizado: ahora - 20000, dispositivo: 'x' }, ahora).hace, 'ahora mismo');
+  assert.equal(A.sincronizacion({ actualizado: ahora - 25 * 60000, dispositivo: 'x' }, ahora).hace, 'hace 25 min');
+  assert.equal(A.sincronizacion({ actualizado: ahora - 36 * H, dispositivo: 'x' }, ahora).obsoleta, false, 'exactly 36 h is not stale yet');
+  const viejo = A.sincronizacion({ actualizado: ahora - 36 * H - 1000, dispositivo: 'x' }, ahora);
+  assert.equal(viejo.obsoleta, true);
+  assert.equal(viejo.hace, 'hace 36 h');
+  assert.equal(A.sincronizacion({ actualizado: ahora - 3 * 24 * H, dispositivo: 'x' }, ahora).hace, 'hace 3 d');
+  assert.equal(A.sincronizacion({ actualizado: ahora + 5000, dispositivo: 'x' }, ahora).obsoleta, false, 'clock skew is not stale');
+});
+
+test('sincronizacion: missing or broken metadata is reported as stale, never as fresh', () => {
+  const ahora = Date.UTC(2026, 9, 1, 12, 0, 0);
+  for (const meta of [null, undefined, {}, { actualizado: 0 }, { actualizado: 'ayer' }, { actualizado: NaN }]) {
+    assert.deepEqual(A.sincronizacion(meta, ahora), { actualizado: null, dispositivo: null, hace: 'sin fecha', obsoleta: true }, JSON.stringify(meta));
+  }
+  assert.equal(A.sincronizacion({ dispositivo: 'movil-abc' }, ahora).dispositivo, 'movil-abc');
+});

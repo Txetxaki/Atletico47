@@ -262,4 +262,17 @@ function resumenGeneral(estado, o) {
   };
 }
 
-module.exports = { resumenGeneral, adherencia, historialEjercicio, tendenciaCuerpo, diasSinEntrenar, queToca, _util: { diasEntre, sumaDias, lunesDe, redondea, lista, hoyDe, DIAS } };
+/* How fresh the Pi copy is, from the state API row (actualizado in ms, dispositivo). The agent must not
+ * present numbers older than OBSOLETA_MS as current. Missing or broken metadata counts as stale. */
+const OBSOLETA_MS = 36 * 3600000;
+function sincronizacion(meta, ahora) {
+  const ts = meta && typeof meta.actualizado === 'number' && Number.isFinite(meta.actualizado) && meta.actualizado > 0 ? meta.actualizado : null;
+  const dispositivo = meta && typeof meta.dispositivo === 'string' ? meta.dispositivo : null;
+  if (ts === null) return { actualizado: null, dispositivo, hace: 'sin fecha', obsoleta: true };
+  const s = Math.floor((ahora - ts) / 1000);
+  const hace = s < 60 ? 'ahora mismo' : s < 3600 ? 'hace ' + Math.floor(s / 60) + ' min'
+    : s < 86400 * 2 ? 'hace ' + Math.floor(s / 3600) + ' h' : 'hace ' + Math.floor(s / 86400) + ' d';
+  return { actualizado: new Date(ts).toISOString(), dispositivo, hace, obsoleta: ahora - ts > OBSOLETA_MS };
+}
+
+module.exports = { resumenGeneral, sincronizacion, adherencia, historialEjercicio, tendenciaCuerpo, diasSinEntrenar, queToca, _util: { diasEntre, sumaDias, lunesDe, redondea, lista, hoyDe, DIAS } };

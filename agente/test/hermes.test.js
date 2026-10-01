@@ -130,6 +130,13 @@ test('SOUL.md carries the non-negotiable safety rules of the app, in Spanish', (
   assert.match(soul, /notas|datos/i);
   assert.match(soul, /confirm/i);
 });
+test('SOUL.md tells the agent not to present stale Pi data as current', () => {
+  const soul = fs.readFileSync(path.join(DIR, 'SOUL.md'), 'utf8');
+  assert.ok(soul.includes('sincronizacion.obsoleta'));
+  assert.match(soul, /Tailscale/);
+  assert.match(soul, /hace/);
+  assert.match(soul, /nunca presentes (esas )?cifras (viejas )?como (si fueran )?actuales/i);
+});
 test('the rules in SOUL.md match the ones the in-app coach receives (sitio/app.js)', () => {
   const app = fs.readFileSync(path.join(__dirname, '..', '..', 'sitio', 'app.js'), 'utf8');
   const soul = fs.readFileSync(path.join(DIR, 'SOUL.md'), 'utf8');

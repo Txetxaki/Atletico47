@@ -61,7 +61,8 @@ historial. Tampoco cambian las unidades systemd (`atletico47-web.service` y
 | `sitio/sw.js` | Service worker: caché sin conexión y recepción de push |
 | `sitio/migrar.html` | Mueve el blob de un origen a otro |
 | `servidor-web.js` | Estático + enrutado de `/api/*` (puerto 8091, variable `PUERTO`) |
-| `api-estado.js` | Estado en SQLite con 60 instantáneas por clave |
+| `api-estado.js` | Estado en SQLite con 60 instantáneas por clave; fusiona las escrituras que parten de una versión vieja |
+| `merge.js` | Fusión registro a registro de dos estados (pura, con tests) |
 | `api-coach.js` | Proxy al Coach en la Pi (MiniMax); la clave nunca sale del servidor |
 | `api/coach.js` | El mismo proxy, como función serverless de Vercel (para cuando la PWA se sirve desde GitHub Pages) |
 | `coach-core.js` | Núcleo compartido por los dos proxys: llamada a MiniMax, herramientas, validación del código |
@@ -131,8 +132,16 @@ pasado. Se limpia también al cerrar semana.
 ## Datos
 
 Doble capa, igual que la PWA hermana: `localStorage` (clave `a47v1`, síncrono,
-siempre primero) y SQLite en la Pi como sincronización. Gana el último por
-marca de tiempo; cada escritura deja instantánea en `historial`.
+siempre primero) y SQLite en la Pi como fuente de verdad. Cada escritura lleva
+la versión de la que parte (`base`): si nadie escribió entre medias, se guarda
+tal cual (los borrados también); si otro dispositivo escribió antes, el
+servidor fusiona registro a registro con `merge.js` (sesiones, partidos y
+cuerpo por fecha; comidas, notas y cambios del Coach sin perder ninguno; la
+disposición de `hoy` por fecha; la configuración entera de la versión más
+nueva) y devuelve la fusión. Cada escritura deja instantánea en `historial`.
+Con la app abierta se traen los cambios de otros dispositivos al volver a
+ella, al recuperar la red y cada 20 s; el estado se ve en Ajustes →
+Sincronización.
 
 ## Poner en marcha en la Pi
 
@@ -288,7 +297,7 @@ stdio, sin dependencias) que lee la API local (`OSMAGYM_BASE`, por defecto
 
 | Herramienta | Qué hace |
 |---|---|
-| `resumen_general` | Programa, plan de la semana con lo hecho, última sesión y partido, cuerpo, avisos duros |
+| `resumen_general` | Frescura de los datos de la Pi (`sincronizacion`, obsoleta a las 36 h), programa, plan de la semana con lo hecho, última sesión y partido, cuerpo, avisos duros |
 | `historial_ejercicio` | Últimas sesiones de un ejercicio |
 | `adherencia` | Fuerza y pádel por semana, racha |
 | `tendencia_cuerpo` | Peso, cintura, tensión, sueño, cigarrillos, dolor por articulación, rodillas y sueño de «cómo vienes hoy» |

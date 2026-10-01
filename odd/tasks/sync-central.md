@@ -36,8 +36,8 @@ Strict TDD, runner `node --test` (`npm run test:agente` runs agente/, sitio/ and
 - [x] S2 `api-estado.js` conflict path uses merge, responds with merged value; deploy restarts on merge.js
 - [x] S3 `storage-remote.js`: adopt merged responses, `refrescar()` on focus/visibility/online/interval, `forzar()`, status
 - [x] S4 app wiring: re-render on remote change keeping UI state; "Sincronización" panel in Ajustes; SW cache bump
-- [ ] S5 freshness for the trainer agent: `resumen_general.sincronizacion` + SOUL rule
-- [ ] S6 two-device browser smoke test
+- [x] S5 freshness for the trainer agent: `resumen_general.sincronizacion` + SOUL rule
+- [x] S6 two-device browser smoke test
 
 ## Progress / evidence
 Route: delegated direct, one bounded writer (writer trigger: 2+ non-trivial files).
@@ -62,6 +62,31 @@ Route: delegated direct, one bounded writer (writer trigger: 2+ non-trivial file
   "Sincronización" section (connection, central URL, last sync, pending, device, last merge, last error,
   "Sincronizar ahora", "Copiar datos para migrar", Vercel-copy sentence on the remote copy). No unit
   harness exists for app.js; the behaviour is proven by the S6 browser smoke. SW cache og-v15 -> og-v16.
+- S5 feat(agente): `analisis.sincronizacion(meta, ahora)` (pure) and `resumen_general.sincronizacion`
+  `{ actualizado ISO, dispositivo, hace, obsoleta }` read from the state API row (`mcp-osma.js` now keeps
+  `actualizado`/`dispositivo`; `leerEstado` unchanged for callers; clock injectable via `opts.ahora`).
+  Missing/broken metadata -> `hace: 'sin fecha', obsoleta: true`. SOUL.md rule: say the data is from
+  `hace`, open the app with Tailscale on, never present stale numbers as current. RED: 5 failing
+  (2 analisis, 2 mcp-osma, 1 hermes SOUL); GREEN. End to end against a spawned server with a 50 h old
+  row: `{ hace: 'hace 2 d', obsoleta: true, dispositivo: 'movil-osma' }`. LEEME updated (sync rules, tool).
+- S6 two-device Playwright smoke (scratchpad `smoke-dos-OsmaGym.js`, not in repo; A = static origin with
+  the Pi override = Vercel-like copy, B = Pi origin; 390x780): 26/26 PASS. Concurrent offline/online edits
+  on different records (hist + hoy date on A, cuerpo + another hoy date on B) both survive on the server
+  and on A without reload; idle B on Historial shows A's session via the 20 s interval (18 s), keeps its
+  tab, toast shown; A refreshes on visibilitychange keeping Cuerpo; typing defers the reload until blur;
+  a fast-forward deletion sticks (server, other device, and after a later write); Ajustes panel shows
+  "Conectado a la Pi", then "Sin conexión con la Pi" + pending + last error with the server down, the app
+  keeps saving locally, and "Sincronizar ahora" uploads after the server is back; Vercel-copy sentence only
+  on the remote copy; no console/page errors on either device. Screenshots `osma-sync-conectado.png` and
+  `osma-sync-sin-conexion.png` reviewed. Existing first-contact smoke `smoke-primer-OsmaGym.js` 6/6.
+- Full suite: `npm run test:agente` 184/184 (baseline 140).
+
+Known limits: a conflict merge is a union, so a deletion made on a stale base comes back (fast-forward
+deletions stick); a meal or note edited on both sides during a conflict can appear twice; `plan`, `regen`,
+`ejCustom` and `platos` are taken whole from the newer blob, so one side's change there can be lost in a
+conflict (it stays in `historial`).
 
 ## Next step
-S5.
+Native review of the five commits, then deploy (Vercel + Pi; the Pi needs a service
+restart for merge.js, `scripts/desplegar.sh` does it) and recreate the Hermes profile so the new SOUL
+rule lands (`agente/hermes/crear-perfil.sh`).

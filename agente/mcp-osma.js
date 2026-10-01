@@ -25,9 +25,9 @@ const ESQUEMA_VACIO = { type: 'object', properties: {}, additionalProperties: fa
 const TOOLS = [
   {
     name: 'resumen_general',
-    description: 'Resumen de Osma y su programa: semana del programa, fase y si toca descarga, dias de fuerza y de padel, articulaciones marcadas en fase mala, plan de la semana en curso (con lo ya hecho), ultima sesion y ultimo partido, ultimo registro de cuerpo (peso, cintura, sueno, cigarrillos, dolor por articulacion), ultima tension, como viene hoy y avisos duros (tension 180/110, rodillas 7/10). Empieza por aqui.',
+    description: 'Resumen de Osma y su programa: frescura de los datos de la Pi (sincronizacion: cuando se actualizaron por ultima vez, desde que dispositivo, hace cuanto y si estan obsoletos, mas de 36 h), semana del programa, fase y si toca descarga, dias de fuerza y de padel, articulaciones marcadas en fase mala, plan de la semana en curso (con lo ya hecho), ultima sesion y ultimo partido, ultimo registro de cuerpo (peso, cintura, sueno, cigarrillos, dolor por articulacion), ultima tension, como viene hoy y avisos duros (tension 180/110, rodillas 7/10). Empieza por aqui.',
     inputSchema: ESQUEMA_VACIO,
-    run: (estado, _args, o) => A.resumenGeneral(estado, o)
+    run: (estado, _args, o) => Object.assign(A.resumenGeneral(estado, o), { sincronizacion: A.sincronizacion(o.fila, o.ahora) })
   },
   {
     name: 'historial_ejercicio',
@@ -153,14 +153,19 @@ function cargarNombres(ruta) {
   }
 }
 
-async function leerEstado(fetchFn, base) {
+// The state API row: the parsed state plus when and from which device it was last written.
+async function leerFila(fetchFn, base) {
   const res = await fetchFn(base + '/api/estado/' + CLAVE, { signal: AbortSignal.timeout(TIMEOUT_MS) });
   if (res.status === 404) throw new Error('todavia no hay datos de OsmaGym sincronizados en la Pi: la app aun no ha subido su estado (abrela con Tailscale activo)');
   if (!res.ok) throw new Error('la API de OsmaGym respondio ' + res.status);
   const cuerpo = await res.json();
   const valor = typeof cuerpo.valor === 'string' ? JSON.parse(cuerpo.valor) : cuerpo.valor;
   if (!valor || typeof valor !== 'object') throw new Error('estado vacio o ilegible');
-  return valor;
+  return { valor, actualizado: cuerpo.actualizado, dispositivo: cuerpo.dispositivo };
+}
+
+async function leerEstado(fetchFn, base) {
+  return (await leerFila(fetchFn, base)).valor;
 }
 
 function compacto(x) {
@@ -171,6 +176,7 @@ function crearManejador(opts) {
   const fetchFn = opts.fetchFn || fetch;
   const base = (opts.base || process.env.OSMAGYM_BASE || 'http://127.0.0.1:8091').replace(/\/+$/, '');
   const nombres = opts.nombres || {};
+  const ahora = opts.ahora || Date.now;
   const ctx = { fetchFn, base, auditoria: opts.auditoria || almacen.rutaAuditoria(process.env), hoy: opts.hoy || W.hoyMadrid() };
   let escrituras = Promise.resolve();   // one write at a time: each sees the previous one's result
   const ok = (id, result) => ({ jsonrpc: '2.0', id, result });
@@ -194,8 +200,8 @@ function crearManejador(opts) {
       }
     }
     try {
-      const estado = await leerEstado(fetchFn, base);
-      const salida = tool.run(estado, params.arguments || {}, { hoy: opts.hoy, nombres });
+      const fila = await leerFila(fetchFn, base);
+      const salida = tool.run(fila.valor, params.arguments || {}, { hoy: opts.hoy, nombres, fila, ahora: ahora() });
       return ok(id, { content: [{ type: 'text', text: compacto(salida) }] });
     } catch (e) {
       return ok(id, { isError: true, content: [{ type: 'text', text: 'Error: ' + (e && e.message || e) }] });

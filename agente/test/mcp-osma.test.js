@@ -99,6 +99,24 @@ test('tools/call: every tool works end to end on the fixture', async () => {
   }
 });
 
+test('resumen_general: carries the freshness of the Pi copy from the state API row', async () => {
+  const H = 3600000, ahora = Date.UTC(2026, 9, 1, 12, 0, 0);
+  const fila = (actualizado) => async () => ({ ok: true, status: 200, json: async () => ({ valor: JSON.stringify(estado()), actualizado, dispositivo: 'movil-abc' }) });
+  const fresco = texto(await manejador({ fetchFn: fila(ahora - 3 * H), ahora: () => ahora })(rpc('tools/call', { name: 'resumen_general' })));
+  assert.deepEqual(fresco.sincronizacion, { actualizado: '2026-10-01T09:00:00.000Z', dispositivo: 'movil-abc', hace: 'hace 3 h', obsoleta: false });
+  assert.ok(fresco.programa && fresco.semanaActual, 'the rest of the summary is unchanged');
+  const viejo = texto(await manejador({ fetchFn: fila(ahora - 2 * 24 * H), ahora: () => ahora })(rpc('tools/call', { name: 'resumen_general' })));
+  assert.equal(viejo.sincronizacion.obsoleta, true);
+  assert.equal(viejo.sincronizacion.hace, 'hace 2 d');
+});
+
+test('resumen_general: freshness uses the real clock by default', async () => {
+  const f = async () => ({ ok: true, status: 200, json: async () => ({ valor: JSON.stringify(estado()), actualizado: Date.now() - 60000, dispositivo: 'pc' }) });
+  const r = texto(await manejador({ fetchFn: f })(rpc('tools/call', { name: 'resumen_general' })));
+  assert.equal(r.sincronizacion.obsoleta, false);
+  assert.equal(r.sincronizacion.hace, 'hace 1 min');
+});
+
 test('tools/call: state is a JSON string or an object, both work', async () => {
   const f = async () => ({ ok: true, status: 200, json: async () => ({ valor: estado() }) });
   const res = await manejador({ fetchFn: f })(rpc('tools/call', { name: 'dias_sin_entrenar' }));

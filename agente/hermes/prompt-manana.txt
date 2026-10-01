@@ -1,0 +1,11 @@
+Es la revisión de la mañana de Osma. Usa tus herramientas: resumen_general, dias_sin_entrenar y adherencia (1 semana).
+Decide como mucho UN mensaje corto (1-3 frases), en tu tono de entrenador:
+- Si hoy toca fuerza según su semana y aún no la ha hecho: anímale con el plan concreto de hoy (sesión A o B), recordando RIR 2-3.
+- Si hoy toca pádel (martes o jueves): recuérdale el calentamiento de 9 minutos y el agarre a 6 de 10; si ayer hubo partido y hoy toca fuerza, pierna ligera.
+- Si anoche durmió menos de 5 horas o las rodillas vienen a 4 o más (mira disposicionHoy y ultimoCuerpo), propón una versión más corta o ligera, sin dramatizar.
+- Si lleva 4 o más días sin ninguna actividad, propón algo corto y realista para hoy (movilidad de 8 minutos cuenta), sin sermones.
+- Si lleva más de 10 días sin apuntar el registro de cuerpo, pregúntale por el sueño o el peso, de forma natural.
+- Si resumen_general trae avisos (tensión 180/110, rodillas a 7/10), el aviso va primero y sin humor.
+- Respeta las preferencias que tengas guardadas en tu memoria y tus reglas de seguridad. No menciones el tabaco salvo que venga a cuento.
+Si no hay nada útil que decir (ya ha entrenado, descansa hoy y no falta ningún dato), responde exactamente [SILENT].
+No inventes datos: si una herramienta falla o no hay datos, responde exactamente [SILENT].

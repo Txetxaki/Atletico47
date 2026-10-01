@@ -259,6 +259,62 @@ disparo, sin contar el chat ni «Analizar mi día», que siempre están
 disponibles) y aplica sus acciones igual que en el chat. El resumen aparece
 en Hoy: «Tu coach ha revisado el día: …».
 
+## Sincronizar desde Vercel o GitHub Pages
+
+La PWA pública (`https://osmagym.vercel.app` y `https://txetxaki.github.io`)
+sincroniza con la Pi por la tailnet, desde el navegador del propio Osma:
+
+- `sitio/storage-remote.js` elige la base de la API. En la Pi (mismo origen) no
+  cambia nada. En cualquier otro origen usa `https://raspberry.taile8249e.ts.net:10003`
+  (constante `PI_URL`, único sitio donde vive) **si responde**: sondea
+  `/api/salud` (2,5 s, resultado recordado 5 min si va, 2 min si no) y, si no
+  llega, todo sigue en `localStorage` con los cambios pendientes.
+- `localStorage['a47__remoto']` permite apuntar a otra Pi, pero solo se acepta un
+  destino de la tailnet (`*.ts.net`), de la red local o `localhost`; un host
+  público se ignora.
+- `cors.js` deja pasar esos dos orígenes (más los de la variable
+  `OSMAGYM_ORIGENES`, separados por comas) y solo en `/api/*`: origen exacto,
+  nunca `*`, nunca credenciales, preflight 204 con `Vary: Origin`. La API sigue
+  siendo solo de tailnet.
+- `OSMAGYM_DATOS` cambia la carpeta de la base de datos (los tests la usan para
+  no tocar la real).
+
+## El agente entrenador (Hermes + Telegram)
+
+Un perfil de Hermes en la Pi, `entrenadorosma`, habla con Osma por Telegram y
+conoce la app a través de un servidor MCP propio (`agente/mcp-osma.js`, por
+stdio, sin dependencias) que lee la API local (`OSMAGYM_BASE`, por defecto
+`http://127.0.0.1:8091`).
+
+| Herramienta | Qué hace |
+|---|---|
+| `resumen_general` | Programa, plan de la semana con lo hecho, última sesión y partido, cuerpo, avisos duros |
+| `historial_ejercicio` | Últimas sesiones de un ejercicio |
+| `adherencia` | Fuerza y pádel por semana, racha |
+| `tendencia_cuerpo` | Peso, cintura, tensión, sueño, cigarrillos, dolor por articulación, rodillas y sueño de «cómo vienes hoy» |
+| `dias_sin_entrenar` | Desde la última fuerza, el último partido y cualquier actividad |
+| `registrar_cuerpo` | Escribe en el registro semanal de cuerpo, con rangos, log de auditoría y deshacer |
+| `anadir_nota` | Añade una nota de comida (la única lista de notas que tiene la app) |
+| `deshacer_ultimo_cambio` | Revierte la última escritura del agente |
+
+El agente **no** ve el código del Coach ni las suscripciones push, y solo puede
+escribir en `cuerpo` y `notas.comida`. El log de auditoría va a
+`datos/agente-auditoria.jsonl` (`OSMAGYM_AUDIT` lo cambia). Escribir desde el agente no
+dispara la replanificación de la semana (`revisarReplan`): esa solo se activa cuando
+Osma guarda el registro en la propia app.
+
+Puesta en marcha en la Pi (el código va en `~/osmagym`):
+
+```
+ORCA_API_KEY=... ~/osmagym/agente/hermes/crear-perfil.sh
+~/osmagym/agente/hermes/activar-telegram.sh <bot_token> <chat_id>
+```
+
+`crear-perfil.sh` es idempotente (rotar la clave, o regenerar `SOUL.md` y la skill
+`osmagym-app` desde este LEEME). `activar-telegram.sh` crea los avisos de
+08:30 y del domingo a las 19:00 desde `prompt-manana.txt` y `prompt-semanal.txt`.
+Tests: `npm run test:agente`.
+
 ## Lo que falta
 
 - [ ] `MINIMAX_API_KEY` y `COACH_CODE` en Vercel, y `coach.json` en la Pi

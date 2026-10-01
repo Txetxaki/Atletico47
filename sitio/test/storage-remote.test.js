@@ -66,3 +66,68 @@ test('primerContacto: a device that never synced must not be overwritten by a sm
   assert.equal(R.primerContacto({ local: grande, remoto: vacio, tieneBase: false, mismoDispositivo: true }), 'normal');
   assert.equal(R.primerContacto({ local: null, remoto: grande, tieneBase: false, mismoDispositivo: false }), 'normal');
 });
+
+test('decidirRefresco: pending local changes are uploaded first (the server merges on conflict)', () => {
+  assert.equal(R.decidirRefresco({ pendiente: true, tieneBase: true, base: 5, remoto: { actualizado: 9 } }), 'subir');
+  assert.equal(R.decidirRefresco({ pendiente: true, tieneBase: false, base: null, remoto: null }), 'subir');
+});
+test('decidirRefresco: a device that never synced goes through the first-contact rule', () => {
+  assert.equal(R.decidirRefresco({ pendiente: false, tieneBase: false, base: null, remoto: { actualizado: 9 } }), 'primer-contacto');
+});
+test('decidirRefresco: adopt only a strictly newer remote version', () => {
+  assert.equal(R.decidirRefresco({ pendiente: false, tieneBase: true, base: 5, remoto: { actualizado: 9 } }), 'adoptar');
+  assert.equal(R.decidirRefresco({ pendiente: false, tieneBase: true, base: 9, remoto: { actualizado: 9 } }), 'nada');
+  assert.equal(R.decidirRefresco({ pendiente: false, tieneBase: true, base: 12, remoto: { actualizado: 9 } }), 'nada');
+  assert.equal(R.decidirRefresco({ pendiente: false, tieneBase: true, base: 5, remoto: null }), 'nada');
+  assert.equal(R.decidirRefresco({ pendiente: false, tieneBase: true, base: 5, remoto: { actualizado: 'x' } }), 'nada');
+});
+
+test('tocaRefrescar: the interval only polls while visible and not known to be unreachable', () => {
+  assert.equal(R.tocaRefrescar({ visible: true, sonda: 'si' }), true);
+  assert.equal(R.tocaRefrescar({ visible: true, sonda: 'sondar' }), true);
+  assert.equal(R.tocaRefrescar({ visible: true, sonda: 'no' }), false);
+  assert.equal(R.tocaRefrescar({ visible: false, sonda: 'si' }), false);
+});
+
+test('trasSubir: a merged answer replaces the local copy when nothing changed meanwhile', () => {
+  const r = R.trasSubir({ enviado: 'A', localAhora: 'A', res: { ok: true, actualizado: 50, conflicto: true, fusionado: true, valor: 'AB' } });
+  assert.deepEqual(r, { valor: 'AB', ts: 50, base: 50, pend: '', fusionado: true });
+});
+test('trasSubir: a merged answer never overwrites a newer local save; base stays so the next PUT merges again', () => {
+  const r = R.trasSubir({ enviado: 'A', localAhora: 'A2', res: { ok: true, actualizado: 50, fusionado: true, valor: 'AB' } });
+  assert.deepEqual(r, { pend: '1', fusionado: false });
+});
+test('trasSubir: a plain answer advances base and clears pending only if local is what was sent', () => {
+  assert.deepEqual(R.trasSubir({ enviado: 'A', localAhora: 'A', res: { ok: true, actualizado: 50, conflicto: false } }), { base: 50, pend: '', fusionado: false });
+  assert.deepEqual(R.trasSubir({ enviado: 'A', localAhora: 'A2', res: { ok: true, actualizado: 50, conflicto: false } }), { base: 50, pend: '1', fusionado: false });
+});
+test('trasSubir: a merged answer without a usable value is treated as a plain answer', () => {
+  assert.deepEqual(R.trasSubir({ enviado: 'A', localAhora: 'A', res: { ok: true, actualizado: 50, fusionado: true } }), { base: 50, pend: '', fusionado: false });
+});
+
+test('haceCuanto: short Spanish relative times', () => {
+  const m = 60000;
+  assert.equal(R.haceCuanto(null, 10 * m), 'nunca');
+  assert.equal(R.haceCuanto(10 * m - 5000, 10 * m), 'ahora mismo');
+  assert.equal(R.haceCuanto(8 * m, 10 * m), 'hace 2 min');
+  assert.equal(R.haceCuanto(0, 180 * m), 'hace 3 h');
+  assert.equal(R.haceCuanto(0, 3 * 1440 * m), 'hace 3 d');
+  assert.equal(R.haceCuanto(20 * m, 10 * m), 'ahora mismo');
+});
+
+test('etiquetaConexion: three states for the Ajustes panel', () => {
+  assert.equal(R.etiquetaConexion(true), 'Conectado a la Pi');
+  assert.equal(R.etiquetaConexion(false), 'Sin conexión con la Pi');
+  assert.equal(R.etiquetaConexion(null), 'Copia local');
+});
+
+test('mensajeError: network failures read in Spanish, HTTP and other errors stay recognisable', () => {
+  assert.equal(R.mensajeError(new TypeError('Failed to fetch')), 'la Pi no responde');
+  assert.equal(R.mensajeError(new TypeError('NetworkError when attempting to fetch resource.')), 'la Pi no responde');
+  assert.equal(R.mensajeError(new TypeError('Load failed')), 'la Pi no responde');
+  assert.equal(R.mensajeError({ name: 'AbortError', message: 'The user aborted a request.' }), 'la Pi tardó demasiado en responder');
+  assert.equal(R.mensajeError(new Error('Pi fuera de alcance')), 'la Pi no responde');
+  assert.equal(R.mensajeError(new Error('HTTP 500')), 'el servidor respondió HTTP 500');
+  assert.equal(R.mensajeError('raro'), 'raro');
+  assert.equal(R.mensajeError(null), 'error desconocido');
+});

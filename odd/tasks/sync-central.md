@@ -34,7 +34,7 @@ Strict TDD, runner `node --test` (`npm run test:agente` runs agente/, sitio/ and
 ## Tasks
 - [x] S1 `merge.js` pure record-level merge (arrays + object maps) + tests
 - [x] S2 `api-estado.js` conflict path uses merge, responds with merged value; deploy restarts on merge.js
-- [ ] S3 `storage-remote.js`: adopt merged responses, `refrescar()` on focus/visibility/online/interval, `forzar()`, status
+- [x] S3 `storage-remote.js`: adopt merged responses, `refrescar()` on focus/visibility/online/interval, `forzar()`, status
 - [ ] S4 app wiring: re-render on remote change keeping UI state; "Sincronización" panel in Ajustes; SW cache bump
 - [ ] S5 freshness for the trainer agent: `resumen_general.sincronizacion` + SOUL rule
 - [ ] S6 two-device browser smoke test
@@ -51,6 +51,11 @@ Route: delegated direct, one bounded writer (writer trigger: 2+ non-trivial file
   a merge that device has not absorbed yet). `scripts/desplegar.sh` restarts on `merge.js` changes.
   Agent conflict path checked against the real server (scratchpad script): its note lands on top of the
   other device's version, nothing lost.
+- S3 feat(sync): client. `sitio/storage-remote.js` is the TxeGym client with OsmaGym's names (global
+  `OsmaSync`, event `a47sync`, key `a47v1`, Pi :10003); the pre-change OsmaGym file was verified equal to
+  the TxeGym base modulo those names, so nothing OsmaGym-specific was dropped. RED
+  `node --test sitio/test/storage-remote.test.js` -> 11 failing (`R.decidirRefresco is not a function`,
+  `R.trasSubir`, `R.haceCuanto`, `R.etiquetaConexion`, `R.mensajeError`, `R.tocaRefrescar`); GREEN 24/24.
 
 ## Next step
-S3.
+S4.

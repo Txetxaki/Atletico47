@@ -162,7 +162,7 @@ function extraCard(x,j){
  var L=LIB[x.id],nS=x.min?0:Math.max((x.reps||[]).length,1),sets='',h=hechoX(x);
  for(var k=0;k<nS;k++){var v=(x.reps&&x.reps[k])||'';sets+='<div class="serie'+(v?' ok':'')+'"><label>S'+(k+1)+'</label><input type="text" inputmode="numeric" placeholder="'+(L&&L.seg?'seg':'reps')+'" value="'+v+'" oninput="setRepX('+j+','+k+',this.value)"></div>'}
  var r=(x.reps||[]).filter(function(v){return v>0}),resumen=x.min?x.min+' min':(r.length?r.length+'×'+(r.every(function(v){return v===r[0]})?r[0]:r.join('-')):'');
- return '<article class="ex'+(h?' done':'')+'" id="x'+j+'"><div class="exrow"><button class="exok" onclick="toggleHechoX('+j+')" aria-label="Marcar hecho" aria-pressed="'+h+'">✓</button>'
+ return '<article class="ex'+(h?' done':'')+'" id="x'+j+'"'+ca('ejercicio','extra'+j,'extra',x.n)+'><div class="exrow"><button class="exok" onclick="toggleHechoX('+j+')" aria-label="Marcar hecho" aria-pressed="'+h+'">✓</button>'
  +'<button class="exhd" onclick="opX('+j+')" aria-expanded="false"><span class="num">+</span><span class="name">'+esc(x.n)+'<span class="chip">extra</span></span>'
  +'<span class="kgb"><b>'+(x.peso?x.peso+' kg':(x.min?'tiempo':'—'))+'</b><span>'+resumen+'</span></span><span class="chev">▶</span></button></div>'
  +'<div class="body">'+(L?'<p class="cue">'+esc(L.c)+'</p>':'')

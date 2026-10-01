@@ -157,6 +157,14 @@ h3.sec{font-size:16px;color:var(--paper);margin:26px 0 12px;padding-bottom:9px;f
 .sug button:hover{border-color:var(--acc);color:var(--acc)}
 .spin{display:inline-block;width:13px;height:13px;border:2px solid var(--line);border-top-color:var(--acc);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:7px}
 @keyframes sp{to{transform:rotate(360deg)}}
+.cfab{position:fixed;right:16px;z-index:55;border-radius:999px;font-family:"Barlow Condensed",sans-serif;text-transform:uppercase;font-weight:700;letter-spacing:.04em;box-shadow:0 4px 14px rgba(0,0,0,.5)}
+#coachFab{bottom:calc(84px + env(safe-area-inset-bottom));width:56px;height:56px;background:var(--acc);color:var(--ink);font-size:14px}
+#coachSenalar{bottom:calc(150px + env(safe-area-inset-bottom));height:40px;padding:0 14px;background:var(--card);color:var(--paper);border:1.5px solid var(--line);font-size:13px}
+#coachSenalar[aria-pressed=true]{background:var(--paper);color:var(--ink);border-color:var(--acc)}
+#senalHint{position:fixed;left:16px;right:16px;top:calc(10px + env(safe-area-inset-top));z-index:70;background:var(--paper);color:var(--ink);border-left:4px solid var(--acc);border-radius:8px;padding:10px 14px;font-weight:600;font-size:14px;text-align:center}
+#senalHint[hidden]{display:none}
+body.senalando [data-coach-tipo]{outline:1px dashed var(--acc);outline-offset:2px;cursor:crosshair}
+.senalado{outline:3px solid var(--acc)!important;outline-offset:2px;background:rgba(255,199,44,.18)!important;transition:background .4s}
 #timer,#guia{position:fixed;left:0;right:0;bottom:0;background:var(--acc);color:var(--ink);padding:14px 16px calc(14px + env(safe-area-inset-bottom));display:none;align-items:center;gap:14px;z-index:60}
 #timer.on{display:flex}
 #guia.on{display:flex;flex-wrap:wrap;gap:6px 14px}
@@ -212,6 +220,9 @@ footer{border-top:1px solid var(--line);margin-top:30px;padding:16px 0 24px;font
 <footer id="foot"></footer>
 </div>
 <div id="toast" role="status" aria-live="polite"></div>
+<div id="senalHint" role="status" aria-live="polite" hidden>Toca lo que quieras señalar · Esc para cancelar</div>
+<button class="cfab" id="coachSenalar" type="button" aria-pressed="false" aria-label="Señalar un elemento para el Coach">Señalar</button>
+<button class="cfab" id="coachFab" type="button" aria-label="Coach">Coach</button>
 <div id="modal"><div class="mbox"><p id="mtxt"></p><div class="row"><button class="btn gh sm" onclick="mNo()">Cancelar</button><button class="btn sm" onclick="mSi()">Confirmar</button></div></div></div>
 <div id="timer" role="status" aria-live="polite"><span id="tnum">2:00</span><span id="tlab">Descanso</span><button onclick="addT(30)">+30s</button><button onclick="stopT()">Saltar</button></div>
 <div id="guia" role="status" aria-live="polite"><span id="gT">1:00</span><span id="gN"></span><button onclick="saltarG()">Siguiente</button><button onclick="pararG()">Parar</button><span id="gC"></span></div>
@@ -221,6 +232,7 @@ footer{border-top:1px solid var(--line);margin-top:30px;padding:16px 0 24px;font
 <script src="biblioteca.js"></script>
 <script src="motor.js"></script>
 <script src="extras.js"></script>
+<script src="capsula.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

@@ -12,3 +12,9 @@ test('leerCrudo: other HTTP failures keep reporting the status', async () => {
   const ctx = { base: 'http://127.0.0.1:1', fetchFn: async () => ({ ok: false, status: 500, json: async () => ({}) }) };
   await assert.rejects(() => almacen.leerCrudo(ctx), /respondio 500/);
 });
+
+test('leerEstado (read tools): a 404 explains that no data has been synced yet', async () => {
+  const mcp = require('../mcp-osma.js');
+  const fetchFn = async () => ({ ok: false, status: 404, json: async () => ({}) });
+  await assert.rejects(() => mcp.leerEstado(fetchFn, 'http://127.0.0.1:1'), /todavia no hay datos de OsmaGym/);
+});

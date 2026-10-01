@@ -155,6 +155,7 @@ function cargarNombres(ruta) {
 
 async function leerEstado(fetchFn, base) {
   const res = await fetchFn(base + '/api/estado/' + CLAVE, { signal: AbortSignal.timeout(TIMEOUT_MS) });
+  if (res.status === 404) throw new Error('todavia no hay datos de OsmaGym sincronizados en la Pi: la app aun no ha subido su estado (abrela con Tailscale activo)');
   if (!res.ok) throw new Error('la API de OsmaGym respondio ' + res.status);
   const cuerpo = await res.json();
   const valor = typeof cuerpo.valor === 'string' ? JSON.parse(cuerpo.valor) : cuerpo.valor;

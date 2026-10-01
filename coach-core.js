@@ -29,7 +29,8 @@ const SYSTEM = [
  'Eres el coach de fuerza y salud de un hombre de 47 años con cinco operaciones y artrosis.',
  'El primer mensaje del usuario lleva su perfil completo, sus restricciones innegociables y sus datos reales: respétalos siempre.',
  'No eres médico ni fisio: deriva cuando toque. Español, sinceridad extrema, sin halagos.',
- 'Cuando el cambio sea real (un ejercicio le duele, hay que tocar la semana, marcar una articulación en fase mala, cambiar objetivos de comida, dejar una nota para el futuro, o adelantar la descarga), usa las herramientas en vez de solo describirlo en texto: el cliente valida cada llamada contra las reglas del plan (material, articulaciones, nivel desbloqueado, nunca subir carga en las 4 primeras semanas, nunca tocar el pasado) y la aplica o la rechaza con motivo. Si nada de esto encaja, contesta solo en texto.'
+ 'Cuando el cambio sea real (un ejercicio le duele, hay que tocar la semana, marcar una articulación en fase mala, cambiar objetivos de comida, dejar una nota para el futuro, o adelantar la descarga), usa las herramientas en vez de solo describirlo en texto: el cliente valida cada llamada contra las reglas del plan (material, articulaciones, nivel desbloqueado, nunca subir carga en las 4 primeras semanas, nunca tocar el pasado) y la aplica o la rechaza con motivo. Si nada de esto encaja, contesta solo en texto.',
+ 'También puedes cambiar el aspecto de la app con ajustar_apariencia: color de acento, tamaño de letra, densidad, pestañas visibles, nombres y orden. Nunca se puede ocultar Hoy ni Coach, y todo se deshace desde «Cambios del Coach». El contexto indica el aspecto actual si no es el de serie.',
 ].join(' ');
 
 /* Herramientas al estilo Anthropic (name, description, input_schema). Los
@@ -116,6 +117,23 @@ const TOOLS = [
    type: 'object',
    properties: { texto: { type: 'string' } },
    required: ['texto']
+  }
+ },
+ {
+  name: 'ajustar_apariencia',
+  description: 'Cambia el aspecto de la app: color de acento, tamaño de letra, densidad, pestañas visibles, nombres y orden. Solo valores del esquema, nunca código. Ids de pestaña: hoy, tr (Entreno), hi (Progreso), pa (Pádel), cu (Cuerpo), co (Comida), ai (Coach), aj (Ajustes); Hoy y Coach no se pueden ocultar. Pon null en un campo para volver a su valor por defecto.',
+  input_schema: {
+   type: 'object',
+   properties: {
+    acento: { type: ['string', 'null'], description: 'Color #RRGGBB legible sobre fondo negro y sobre las tarjetas (p. ej. #FFC72C dorado, #FF9F1C naranja, #EC4E42 rojo, #1FA64A verde, #F5EEDC crema, #7FB7E6 azul hielo)' },
+    fuente: { type: ['string', 'null'], enum: ['normal', 'grande', 'enorme', null] },
+    densidad: { type: ['string', 'null'], enum: ['comoda', 'compacta', null] },
+    pestanasOcultas: { type: ['array', 'null'], items: { type: 'string' }, description: 'Ids de pestañas a ocultar (la lista completa, sustituye a la anterior)' },
+    etiquetas: { type: 'object', description: 'id de pestaña -> nuevo nombre (máx. 14 caracteres, solo letras, números y espacios); null quita el nombre', additionalProperties: { type: ['string', 'null'] } },
+    ordenPestanas: { type: ['array', 'null'], items: { type: 'string' }, description: 'Orden completo de las pestañas visibles' },
+    motivo: { type: 'string', description: 'Por qué, en una frase' }
+   },
+   required: ['motivo']
   }
  },
  {

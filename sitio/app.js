@@ -648,6 +648,7 @@ function contexto(){
  if(S.notas.comida.length)t.push('NOTAS DE COMIDA: '+S.notas.comida.map(function(n){return n.f+': '+n.t}).join(' | '));
  t.push('COMIDA OBJETIVO: ~'+S.cfg.kcal+' kcal, ~'+S.cfg.prot+' g proteína, método del plato, sin contar. Sin restricción de sal ni DASH (no hay hipertensión conocida).');
  /* memoria del propio Coach: lo que ya ha aplicado o propuesto antes, para no repetirse y para poder construir sobre ello */
+ if(Object.keys(S.ui||{}).length)t.push('ASPECTO ACTUAL DE LA APP (perfil declarativo): '+JSON.stringify(S.ui));
  if(S.coachLog&&S.coachLog.length)t.push('CAMBIOS QUE YA HAS APLICADO O PROPUESTO ANTES (más reciente primero, hasta 15): '+S.coachLog.slice(0,15).map(function(l){return l.f+' ['+l.estado+'] '+l.accion+': '+l.detalle}).join(' | '));
  t.push('NOTA SOBRE LOS DATOS: los ejercicios [asumidos] no los apuntó; se dieron por hechos según el plan. Menos confianza que los medidos. Los [cambiados por dolor] indican dónde ha habido molestia real.');
  t.push('ESTILO: responde en español, sinceridad extrema, sin halagos, pros y contras cuando ayuden a decidir. Usa SUS datos reales. Si te falta un dato, pregúntalo en vez de suponerlo. Máximo 250 palabras salvo que pida más. Sobre el tabaco: no sermonees; si pregunta o si es relevante para lo que pregunta, dilo una vez con datos.');
@@ -725,6 +726,7 @@ function vAI(){
  o+=chipCapsula();
  o+='<div class="row" style="margin-top:14px"><input class="nota" id="aiQ" placeholder="Escribe tu pregunta" style="flex:1;min-width:180px" onkeydown="if(event.key===\'Enter\')preguntarIA()"><button class="btn sm" id="aiB" onclick="preguntarIA()">Enviar</button></div>';
  if(chat.length)o+='<div class="row"><button class="btn gh sm" onclick="chat=[];vAI()">Empezar de cero</button></div>';
+ o+=aspectoHTML();
  o+=nota('<b>No sustituye a tu médico ni a un fisio</b>Puede equivocarse. Para una rodilla que se bloquea, cambios de medicación o dudas clínicas, el médico. La visita de fisio para rodillas y cadera sigue pendiente.','w');
  if(S.coachLog&&S.coachLog.length){
   o+='<h3 class="sec">Cambios del Coach</h3><div class="eq">'+S.coachLog.slice(0,20).map(function(l,i){
@@ -788,6 +790,30 @@ document.addEventListener('click',function(e){
  setTimeout(abrirCoach,450);
 },true);
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&senalando)modoSenalar(false)});
+
+/* ---- aspecto declarativo: S.ui (validado por uiperfil.js) -> variables CSS, clases y pestañas.
+   Solo se escriben valores del esquema cerrado; nunca se ejecuta ni se inyecta nada del perfil. ---- */
+var _tabBase=null;
+function aplicarAspecto(){
+ var e=OsmaUi.aplicarEstilos(S.ui),r=document.documentElement,nav=document.querySelector('.tabs');
+ Object.keys(e.cssVars).forEach(function(k){r.style.setProperty(k,e.cssVars[k])});
+ document.body.classList.toggle('d-compacta',e.clases.indexOf('d-compacta')>=0);
+ var btn={};document.querySelectorAll('.tab').forEach(function(b){btn[b.dataset.t]=b});
+ if(!_tabBase){_tabBase={};Object.keys(btn).forEach(function(k){_tabBase[k]=btn[k].textContent})}
+ var ps=OsmaUi.pestanas(S.ui,_tabBase),vis={};
+ ps.forEach(function(p){vis[p.id]=1;btn[p.id].textContent=p.label;btn[p.id].hidden=false;nav.appendChild(btn[p.id])});
+ Object.keys(btn).forEach(function(k){if(!vis[k]){btn[k].hidden=true;nav.appendChild(btn[k])}});
+ if(!vis[pantallaAct])pantallaAct='hoy';
+ var ver=TABS.filter(function(x){return $(x)&&!$(x).hidden})[0];
+ if(ver&&!vis[ver])vw('hoy');
+}
+function restablecerAspecto(){S.ui={};save();aplicarAspecto();refrescar();toast('Aspecto restablecido')}
+function aspectoHTML(){
+ return '<h3 class="sec">Aspecto</h3><div class="eq" style="padding:14px 16px"><div class="row"><span class="mkcal">'
+  +(Object.keys(S.ui||{}).length?'personalizado: '+esc(Object.keys(S.ui).join(', ')):'el de siempre')+'</span></div>'
+  +'<div class="row">Pídele al Coach cambios de color, letra, pestañas o nombres.</div>'
+  +'<div class="row"><button class="btn gh sm" onclick="restablecerAspecto()">Restablecer aspecto</button></div></div>';
+}
 
 /* ============ AJUSTES ============ */
 function vAjustes(){
@@ -913,9 +939,10 @@ function copiarSub(){if(!S.push||!S.push.sub)return;navigator.clipboard.writeTex
 load(function(){
  $('app').remove();
  cargarBorr();
+ aplicarAspecto();
  $('today').textContent=new Date().toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'}).toUpperCase();
  $('foot').textContent='Semana '+S.semana+' · '+S.hist.length+' sesiones · '+S.padel.length+' partidos · descarga cada 5 semanas';
  revisarDiasPerdidos();
  var t=new URLSearchParams(location.search).get('t');
- vw(t&&TABS.indexOf(t)>=0?t:'hoy');
+ vw(t&&TABS.indexOf(t)>=0&&(S.ui.pestanasOcultas||[]).indexOf(t)<0?t:'hoy');
 });

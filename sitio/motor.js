@@ -30,6 +30,7 @@ var DEF={
  plan:{},            // ajustes automáticos de la semana por fecha, ver "REPLANIFICACIÓN DE LA SEMANA" más abajo
  push:null,
  coachLog:[],        // cambios que el Coach ha aplicado (o propuesto), ver COACH más abajo
+ ui:{},              // perfil de aspecto declarativo (uiperfil.js): acento, fuente, densidad, pestañas
  coachCfg:{codigo:'',auto:1,revisiones:{}}  // código del Coach, si aplica solo o propone, y última revisión automática por tipo de disparo
 };
 var S=null,_ready=false;
@@ -656,6 +657,15 @@ function coachProgramarDescarga(input,aplicar){
  if(aplicar){S.descargaExtra=S.semana;save()}
  return {ok:1,detalle:'Semana '+S.semana+' pasa a descarga (85% y una serie menos).',deshacer:{tipo:'programar_descarga',previo:previo}};
 }
+/* Aspecto de la app (uiperfil.js): el Coach solo puede tocar valores del esquema cerrado.
+   Se valida y se calcula con fusionar() sin mutar; solo con aplicar se escribe S.ui. */
+function coachAjustarApariencia(input,aplicar){
+ var c={};Object.keys(input).forEach(function(k){if(k!=='motivo')c[k]=input[k]});
+ var r=OsmaUi.fusionar(S.ui,c);
+ if(!r.ok)return {ok:0,motivo:r.motivo};
+ if(aplicar){S.ui=r.ui;save();if(typeof aplicarAspecto==='function')aplicarAspecto()}
+ return {ok:1,detalle:'Aspecto: '+Object.keys(c).join(', '),deshacer:{tipo:'ajustar_apariencia',patch:r.deshacer}};
+}
 /* Despachador único: nombre de herramienta tal como lo manda MiniMax (ver
    coach-core.js TOOLS) + su input. aplicar=false valida sin mutar nada. */
 function coachAplicarAccion(nombre,input,aplicar){
@@ -669,6 +679,7 @@ function coachAplicarAccion(nombre,input,aplicar){
   case 'ajustar_objetivos_comida':return coachAjustarObjetivosComida(input,aplicar);
   case 'anadir_nota_plan':return coachAnadirNota(input);
   case 'programar_descarga':return coachProgramarDescarga(input,aplicar);
+  case 'ajustar_apariencia':return coachAjustarApariencia(input,aplicar);
   default:return {ok:0,motivo:'Herramienta no reconocida: "'+nombre+'".'};
  }
 }
@@ -695,6 +706,9 @@ function coachDeshacerAccion(d){
    S.regen=S.regen||{};for(var f in d.regenPrevio){if(d.regenPrevio[f])S.regen[f]=d.regenPrevio[f];else delete S.regen[f]}break;
   case 'ajustar_objetivos_comida':S.cfg.kcal=d.previo.kcal;S.cfg.prot=d.previo.prot;break;
   case 'programar_descarga':S.descargaExtra=d.previo;break;
+  case 'ajustar_apariencia':
+   var ra=OsmaUi.fusionar(S.ui,d.patch);if(ra.ok)S.ui=ra.ui;
+   if(typeof aplicarAspecto==='function')aplicarAspecto();break;
   default:break;
  }
  save();

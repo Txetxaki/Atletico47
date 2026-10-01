@@ -79,6 +79,38 @@ function vw(id){
 }
 /* repinta la pestaña que esté abierta ahora mismo, sin cambiar de pestaña */
 function refrescar(){var vis=TABS.filter(function(x){return $(x)&&!$(x).hidden})[0];if(vis&&VISTAS[vis])VISTAS[vis]()}
+
+/* ============ CAMBIOS DE OTRO DISPOSITIVO ============ */
+/* storage-remote.js avisa con 'a47sync' cuando la copia local ha cambiado por la Pi (bajado) o por una
+   fusión (fusionado). Se recarga S desde esa copia y se repinta la pestaña abierta conservando scroll,
+   ejercicios abiertos y borrador. Si se está escribiendo o hay un diálogo abierto (sus índices podrían
+   cambiar), se espera a que termine. */
+var _tRemoto=null;
+function ocupadoUI(){var a=document.activeElement,t=a&&a.tagName,ty=a?String(a.type||'').toLowerCase():'';
+ return t==='TEXTAREA'||(t==='INPUT'&&!/^(checkbox|radio|button|submit|range|color|file)$/.test(ty))||$('modal').classList.contains('on')}
+function recargarRemoto(){
+ clearTimeout(_tRemoto);_tRemoto=null;
+ if(!_ready)return;
+ if(ocupadoUI()){_tRemoto=setTimeout(recargarRemoto,1000);return}
+ var raw=null;try{raw=localStorage.getItem(CLAVE)}catch(e){}
+ if(!raw||raw===JSON.stringify(S))return;
+ try{if(!JSON.parse(raw).equipo)return}catch(e){return}   /* algo que no es un estado de la app: no se toca S */
+ var y=window.scrollY,abiertos=[];
+ document.querySelectorAll('.ex.open').forEach(function(e){if(e.id)abiertos.push(e.id)});
+ /* como en el arranque, las migraciones no guardan nada: recargar no debe provocar una escritura */
+ _ready=false;try{cargarDesde(raw)}finally{_ready=true}
+ /* el borrador en curso de este dispositivo manda sobre el que traiga la Pi; se guarda con el siguiente cambio */
+ if(borrVacio(borrador))cargarBorr();else{S.borr=S.borr||{};S.borr[borrKey()]=borrador}
+ aplicarAspecto();
+ refrescar();
+ abiertos.forEach(function(id){var e=$(id);if(!e)return;e.classList.add('open');var h=e.querySelector('.exhd');if(h)h.setAttribute('aria-expanded','true')});
+ window.scrollTo(0,y);
+ toast('Datos actualizados desde otro dispositivo');
+}
+window.addEventListener('a47sync',function(ev){var d=ev.detail||{},x=d.detalle||{};
+ if((d.tipo==='bajado'||d.tipo==='fusionado')&&(!x.clave||x.clave===CLAVE))recargarRemoto();
+ pintarSync();
+});
 function avisosHTML(){
  return alertas().map(function(a){
   return '<div class="note '+a.n+'"><b>'+a.t+'</b>'+a.c+(a.accion==='descargaYa'?'<div class="row" style="margin-top:10px"><button class="btn sm" onclick="descargaYa()">Adelantar la descarga</button></div>':'')+'</div>'}).join('');
@@ -872,10 +904,35 @@ function vAjustes(){
  +'<div class="row"><input class="nota" id="vapid" placeholder="Clave pública VAPID del servidor" value="'+esc((S.push&&S.push.vapid)||'')+'" style="flex:1;min-width:170px"><button class="btn gh sm" onclick="suscribirPush()">Suscribir</button></div>'
  +((S.push&&S.push.sub)?'<div class="row"><button class="btn gh sm" onclick="copiarSub()">Copiar suscripción</button><span class="mkcal">lista</span></div>':'')+'</div>';
  o+='<h3 class="sec">Datos</h3><div class="eq" style="padding:14px 16px"><div class="row"><button class="btn gh sm" onclick="exportar()">Copiar copia de seguridad</button><button class="btn gh sm" onclick="$(\'impIn\').hidden=false">Importar</button><button class="btn gh sm rojo" onclick="borrarTodo()">Borrar todo</button></div>'
- +'<div id="impIn" hidden><input class="nota" id="impTxt" placeholder="Pega aquí la copia de seguridad"><div class="row" style="margin-top:8px"><button class="btn sm" onclick="importar()">Cargar</button></div></div>'
- +'<div class="row"><span class="mkcal">'+(window.storage&&window.storage.estado?('sync: '+(window.storage.estado().conectado===false?'sin servidor, guardando en local':'servidor ok')):'solo local')+'</span></div></div>';
+ +'<div id="impIn" hidden><input class="nota" id="impTxt" placeholder="Pega aquí la copia de seguridad"><div class="row" style="margin-top:8px"><button class="btn sm" onclick="importar()">Cargar</button></div></div></div>';
+ /* sincronización */
+ o+='<h3 class="sec">Sincronización</h3><div class="eq" style="padding:14px 16px" id="syncAj">'+syncHTML()+'</div>';
  $('aj').innerHTML=o;
 }
+/* Panel de sincronización: estado de la conexión con la Pi (la central) según storage-remote.js. */
+function syncHTML(){
+ var st=window.storage&&window.storage.estadoSync?window.storage.estadoSync():null,X=window.OsmaSync,ahora=Date.now();
+ if(!st||!X)return '<div class="row"><span class="sdot"></span><b>Copia local</b></div><p class="sub" style="margin:6px 0 0">Este navegador guarda los datos solo aquí.</p>';
+ var cls=st.alcanzable===true?'ok':st.alcanzable===false?'ko':'',
+  fila=function(k,v){return '<div class="row" style="margin:6px 0"><label>'+k+'</label><span class="mkcal">'+v+'</span></div>'};
+ var o='<div class="row" style="margin:0 0 8px"><span class="sdot '+cls+'"></span><b>'+esc(X.etiquetaConexion(st.alcanzable))+'</b></div>'
+  +fila('Central',esc(st.remoto))
+  +fila('Última sincronización',esc(X.haceCuanto(st.ultimaSync,ahora)))
+  +fila('Cambios sin subir',st.pendiente?'<span style="color:var(--warn)">sí, se suben al volver la conexión</span>':'no')
+  +fila('Este dispositivo',esc(st.dispositivo));
+ if(st.ultimaFusion)o+=fila('Última fusión',esc(X.haceCuanto(st.ultimaFusion.ts,ahora)+(st.ultimaFusion.con?' con '+st.ultimaFusion.con:'')));
+ if(st.ultimoError)o+=fila('Último error',esc(st.ultimoError.mensaje+' · '+X.haceCuanto(st.ultimoError.ts,ahora)));
+ if(st.copiaRemota)o+=nota('Esta es la copia de Vercel. La central es la Pi: con Tailscale activo se sincroniza sola.');
+ return o+'<div class="row" style="margin-top:10px;flex-wrap:wrap"><button class="btn sm" id="syncBtn" onclick="syncAhora()">Sincronizar ahora</button><button class="btn gh sm" onclick="exportar()">Copiar datos para migrar</button></div>';
+}
+function pintarSync(){var el=$('syncAj');if(el&&!$('aj').hidden)el.innerHTML=syncHTML()}
+function syncAhora(){
+ if(!window.storage||!window.storage.forzar)return;
+ var b=$('syncBtn');if(b){b.disabled=true;b.textContent='Sincronizando…'}
+ window.storage.forzar().then(function(){var st=window.storage.estadoSync();pintarSync();
+  toast(st.alcanzable?'Sincronizado con la Pi':'Sin conexión con la Pi',!st.alcanzable)});
+}
+setInterval(pintarSync,30000);   /* para que «hace N min» no se quede parado con Ajustes abierto */
 function eqNum(k,n,u){return '<div class="eqi"><label>'+n+'</label><input class="inp" type="text" inputmode="decimal" value="'+S.equipo[k]+'" oninput="S.equipo[\''+k+'\']=parseFloat(this.value)||0;save()"><span class="u">'+u+'</span></div>'}
 function nomMaterial(id){if(NOM[id])return NOM[id];var c=S.equipo.custom.filter(function(x){return x.id===id})[0];return c?c.n:id}
 function setDia(tipo,k,v){var l=S.cfg[tipo];

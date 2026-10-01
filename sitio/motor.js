@@ -40,31 +40,33 @@ function save(){if(!_ready)return;try{
  else localStorage.setItem(CLAVE,JSON.stringify(S));
 }catch(e){}}
 function load(cb){
- function done(raw){
-  try{S=raw?JSON.parse(raw):null}catch(e){S=null}
-  if(!S||!S.equipo){S=clon(DEF);S.cfg.creado=hoyISO()}
-  Object.keys(DEF).forEach(function(k){if(S[k]===undefined)S[k]=clon(DEF[k])});
-  ['discos','tiene','custom'].forEach(function(k){if(!S.equipo[k])S.equipo[k]=clon(DEF.equipo[k])});
-  Object.keys(DEF.equipo.tiene).forEach(function(k){if(S.equipo.tiene[k]===undefined)S.equipo.tiene[k]=DEF.equipo.tiene[k]});
-  Object.keys(DEF.cfg).forEach(function(k){if(S.cfg[k]===undefined)S.cfg[k]=clon(DEF.cfg[k])});
-  Object.keys(DEF.artic).forEach(function(k){if(S.artic[k]===undefined)S.artic[k]=0});
-  if(!S.coachCfg)S.coachCfg=clon(DEF.coachCfg);
-  Object.keys(DEF.coachCfg).forEach(function(k){if(S.coachCfg[k]===undefined)S.coachCfg[k]=clon(DEF.coachCfg[k])});
-  if(!S.semana)S.semana=1;
-  // Los desvíos de la versión anterior pasan al diario de comida como entradas fuera de plan.
-  if(!S.migr1){S.migr1=1;var CD={cambio:'Cambié un plato',picoteo:'Piqué entre horas',fuera:'Comí fuera',salte:'Me salté una comida',alcohol:'Más de una cerveza'};
-   (S.desvios||[]).forEach(function(d){S.comidas.push({f:d.f,h:'Otro',t:(CD[d.c]||d.c)+(d.t?': '+d.t:''),plan:0})});S.comidas.sort(function(a,b){return a.f<b.f?-1:1})}
-  for(var k in S.ejCustom)LIB[k]=S.ejCustom[k];
-  // La disposición diaria solo interesa 60 días: lo demás fuera, que el blob no engorde.
-  var lim=diasAtras(60);Object.keys(S.hoy).forEach(function(f){if(f<lim)delete S.hoy[f]});
-  // Las regeneraciones valen para hoy y para los días futuros de la semana; solo se olvidan al quedar en el pasado.
-  if(!S.regen)S.regen={};var hoyR=hoyISO();Object.keys(S.regen).forEach(function(f){if(f<hoyR)delete S.regen[f]});
-  _ready=true;cb();
- }
+ function done(raw){cargarDesde(raw);_ready=true;cb()}
  try{
   if(window.storage&&window.storage.get)window.storage.get(CLAVE).then(function(r){done(r&&r.value)}).catch(function(){done(null)});
   else done(localStorage.getItem(CLAVE));
  }catch(e){done(null)}
+}
+/* Pone S a partir del JSON guardado con todas las migraciones y valores por defecto. Lo usa el
+   arranque y también la recarga cuando llegan cambios de otro dispositivo (app.js). */
+function cargarDesde(raw){
+ try{S=raw?JSON.parse(raw):null}catch(e){S=null}
+ if(!S||!S.equipo){S=clon(DEF);S.cfg.creado=hoyISO()}
+ Object.keys(DEF).forEach(function(k){if(S[k]===undefined)S[k]=clon(DEF[k])});
+ ['discos','tiene','custom'].forEach(function(k){if(!S.equipo[k])S.equipo[k]=clon(DEF.equipo[k])});
+ Object.keys(DEF.equipo.tiene).forEach(function(k){if(S.equipo.tiene[k]===undefined)S.equipo.tiene[k]=DEF.equipo.tiene[k]});
+ Object.keys(DEF.cfg).forEach(function(k){if(S.cfg[k]===undefined)S.cfg[k]=clon(DEF.cfg[k])});
+ Object.keys(DEF.artic).forEach(function(k){if(S.artic[k]===undefined)S.artic[k]=0});
+ if(!S.coachCfg)S.coachCfg=clon(DEF.coachCfg);
+ Object.keys(DEF.coachCfg).forEach(function(k){if(S.coachCfg[k]===undefined)S.coachCfg[k]=clon(DEF.coachCfg[k])});
+ if(!S.semana)S.semana=1;
+ // Los desvíos de la versión anterior pasan al diario de comida como entradas fuera de plan.
+ if(!S.migr1){S.migr1=1;var CD={cambio:'Cambié un plato',picoteo:'Piqué entre horas',fuera:'Comí fuera',salte:'Me salté una comida',alcohol:'Más de una cerveza'};
+  (S.desvios||[]).forEach(function(d){S.comidas.push({f:d.f,h:'Otro',t:(CD[d.c]||d.c)+(d.t?': '+d.t:''),plan:0})});S.comidas.sort(function(a,b){return a.f<b.f?-1:1})}
+ for(var k in S.ejCustom)LIB[k]=S.ejCustom[k];
+ // La disposición diaria solo interesa 60 días: lo demás fuera, que el blob no engorde.
+ var lim=diasAtras(60);Object.keys(S.hoy).forEach(function(f){if(f<lim)delete S.hoy[f]});
+ // Las regeneraciones valen para hoy y para los días futuros de la semana; solo se olvidan al quedar en el pasado.
+ if(!S.regen)S.regen={};var hoyR=hoyISO();Object.keys(S.regen).forEach(function(f){if(f<hoyR)delete S.regen[f]});
 }
 
 /* ============ FECHAS ============ */

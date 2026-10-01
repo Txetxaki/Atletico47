@@ -35,7 +35,7 @@ Strict TDD, runner `node --test` (`npm run test:agente` runs agente/, sitio/ and
 - [x] S1 `merge.js` pure record-level merge (arrays + object maps) + tests
 - [x] S2 `api-estado.js` conflict path uses merge, responds with merged value; deploy restarts on merge.js
 - [x] S3 `storage-remote.js`: adopt merged responses, `refrescar()` on focus/visibility/online/interval, `forzar()`, status
-- [ ] S4 app wiring: re-render on remote change keeping UI state; "Sincronización" panel in Ajustes; SW cache bump
+- [x] S4 app wiring: re-render on remote change keeping UI state; "Sincronización" panel in Ajustes; SW cache bump
 - [ ] S5 freshness for the trainer agent: `resumen_general.sincronizacion` + SOUL rule
 - [ ] S6 two-device browser smoke test
 
@@ -56,6 +56,12 @@ Route: delegated direct, one bounded writer (writer trigger: 2+ non-trivial file
   the TxeGym base modulo those names, so nothing OsmaGym-specific was dropped. RED
   `node --test sitio/test/storage-remote.test.js` -> 11 failing (`R.decidirRefresco is not a function`,
   `R.trasSubir`, `R.haceCuanto`, `R.etiquetaConexion`, `R.mensajeError`, `R.tocaRefrescar`); GREEN 24/24.
+- S4 feat(sitio): reload S on `bajado`/`fusionado` through motor.js `cargarDesde` (the startup path,
+  without saving), re-apply the appearance profile and repaint the open tab keeping scroll, open
+  exercises and the draft; deferred while typing or with the confirm dialog open; toast. Ajustes gets a
+  "Sincronización" section (connection, central URL, last sync, pending, device, last merge, last error,
+  "Sincronizar ahora", "Copiar datos para migrar", Vercel-copy sentence on the remote copy). No unit
+  harness exists for app.js; the behaviour is proven by the S6 browser smoke. SW cache og-v15 -> og-v16.
 
 ## Next step
-S4.
+S5.

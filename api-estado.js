@@ -16,7 +16,7 @@ const { DatabaseSync } = require('node:sqlite');
 const fs = require('fs');
 const path = require('path');
 
-const DIR = path.join(__dirname, 'datos');
+const DIR = process.env.OSMAGYM_DATOS || path.join(__dirname, 'datos');
 const BD = path.join(DIR, 'atletico47.db');
 const MAX_CUERPO = 5 * 1024 * 1024;
 const SNAPSHOTS = 60;

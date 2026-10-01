@@ -6,7 +6,8 @@
   "main": "servidor-web.js",
   "scripts": {
     "start": "node servidor-web.js",
-    "push": "node servidor-push/push.js"
+    "push": "node servidor-push/push.js",
+    "test:agente": "node --test agente/test/ sitio/test/ test/"
   },
   "engines": { "node": ">=22.5" }
 }

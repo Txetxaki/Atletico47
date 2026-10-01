@@ -7,6 +7,7 @@
  *
  *   /api/estado/*, /api/historial/*, /api/salud   -> api-estado.js (SQLite)
  *   /api/coach                                    -> api-coach.js  (proxy a Claude)
+ *   /api/*                                        -> CORS solo para osmagym.vercel.app, txetxaki.github.io y OSMAGYM_ORIGENES (cors.js)
  */
 
 const http = require('http');
@@ -14,10 +15,12 @@ const fs = require('fs');
 const path = require('path');
 const api = require('./api-estado.js');
 const coach = require('./api-coach.js');
+const cors = require('./cors.js');
 
 const RAIZ = path.join(__dirname, 'sitio');
 const PUERTO = Number(process.env.PUERTO) || 8091;
 const HOST = '127.0.0.1';
+const ORIGENES = cors.listaPermitidos(process.env);
 
 const TIPOS = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
@@ -36,6 +39,8 @@ const servidor = http.createServer((req, res) => {
   let ruta;
   try { ruta = decodeURIComponent(new URL(req.url, 'http://localhost').pathname); }
   catch { res.writeHead(400).end('Peticion mal formada'); return; }
+
+  if (ruta.startsWith('/api/') && cors.aplicar(req, res, ORIGENES)) return;
 
   if (ruta === '/api/coach') {
     coach.manejar(req, res).catch(e => {

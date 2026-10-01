@@ -119,7 +119,7 @@ test('tools/call: backend failures become isError results', async () => {
   const malo = async () => ({ ok: false, status: 404, json: async () => ({ error: 'sin datos' }) });
   const r2 = await manejador({ fetchFn: malo })(rpc('tools/call', { name: 'resumen_general' }));
   assert.equal(r2.result.isError, true);
-  assert.match(r2.result.content[0].text, /404/);
+  assert.match(r2.result.content[0].text, /todavia no hay datos/);
 });
 
 test('tools/call: unknown tool is a JSON-RPC invalid-params error', async () => {

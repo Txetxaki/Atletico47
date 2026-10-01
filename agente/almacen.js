@@ -4,9 +4,10 @@
  *
  * Why it is built this way (see api-estado.js): the server NEVER rejects a PUT. It stores the
  * write, snapshots it in /api/historial, and only reports `conflicto: true` when the stored
- * version is newer than the `base` we sent. So a conflict means the other writer's version was
- * just overwritten. We recover it from the snapshot, re-apply our (small, targeted) change on top
- * of it and PUT again; if anything fails we restore the other version instead of leaving ours. */
+ * version is newer than the `base` we sent. On a conflict the server stores a record-level merge
+ * (merge.js), which can bring back records the other writer deleted. So we still recover the other
+ * writer's version from the snapshot, re-apply our (small, targeted) change on top of it and PUT
+ * again as a fast-forward; if anything fails we restore the other version instead of leaving ours. */
 
 const fs = require('fs');
 const path = require('path');

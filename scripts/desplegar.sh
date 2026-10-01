@@ -41,7 +41,7 @@ if ! git diff --quiet "$ANTES" "$DESPUES" -- package.json; then
   echo "Ha cambiado package.json: npm install"
   npm install --omit=dev
 fi
-if ! git diff --quiet "$ANTES" "$DESPUES" -- servidor-web.js api-estado.js api-coach.js package.json; then
+if ! git diff --quiet "$ANTES" "$DESPUES" -- servidor-web.js api-estado.js merge.js api-coach.js package.json; then
   echo "Ha cambiado el servidor web: reiniciando"
   sudo systemctl restart atletico47-web.service
   sleep 2

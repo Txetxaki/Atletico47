@@ -33,7 +33,7 @@ Strict TDD, runner `node --test` (`npm run test:agente` runs agente/, sitio/ and
 
 ## Tasks
 - [x] S1 `merge.js` pure record-level merge (arrays + object maps) + tests
-- [ ] S2 `api-estado.js` conflict path uses merge, responds with merged value; deploy restarts on merge.js
+- [x] S2 `api-estado.js` conflict path uses merge, responds with merged value; deploy restarts on merge.js
 - [ ] S3 `storage-remote.js`: adopt merged responses, `refrescar()` on focus/visibility/online/interval, `forzar()`, status
 - [ ] S4 app wiring: re-render on remote change keeping UI state; "Sincronización" panel in Ajustes; SW cache bump
 - [ ] S5 freshness for the trainer agent: `resumen_general.sincronizacion` + SOUL rule
@@ -44,6 +44,13 @@ Route: delegated direct, one bounded writer (writer trigger: 2+ non-trivial file
 
 - S1 feat(sync): merge. RED `node --test test/merge.test.js` -> `Cannot find module '../merge.js'`;
   GREEN 19/19.
+- S2 feat(sync): server. `api-estado.js` + `test/estado.test.js` (spawns the real server). RED: 4 of 8
+  failing (stale-base merge, snapshots, newer config, same-device stale base); GREEN 9/9. The conflict
+  stores the merge with `actualizado = max(now, stored+1)` and snapshots the raw incoming write AND the
+  merge; merges over 5 MB fall back to the old overwrite. No same-device exception (the stored row may be
+  a merge that device has not absorbed yet). `scripts/desplegar.sh` restarts on `merge.js` changes.
+  Agent conflict path checked against the real server (scratchpad script): its note lands on top of the
+  other device's version, nothing lost.
 
 ## Next step
-S2.
+S3.

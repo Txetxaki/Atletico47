@@ -55,3 +55,14 @@ test('elegirBase: hosts hidden in userinfo, query or fragment do not pass as pri
   }
   assert.equal(R.elegirBase({ origin, piUrl: PI, override: 'https://raspberry.taile8249e.ts.net:10009/' }), 'https://raspberry.taile8249e.ts.net:10009');
 });
+
+test('primerContacto: a device that never synced must not be overwritten by a smaller server state', () => {
+  const grande = JSON.stringify({ hist: [{ f: '2026-09-01' }, { f: '2026-09-03' }], cuerpo: [{ f: '2026-09-02', peso: 80 }] });
+  const vacio = JSON.stringify({ hist: [], cuerpo: [] });
+  assert.equal(R.primerContacto({ local: grande, remoto: vacio, tieneBase: false, mismoDispositivo: false }), 'local');
+  assert.equal(R.primerContacto({ local: vacio, remoto: grande, tieneBase: false, mismoDispositivo: false }), 'remoto-con-respaldo');
+  assert.equal(R.primerContacto({ local: grande, remoto: grande, tieneBase: false, mismoDispositivo: false }), 'normal');
+  assert.equal(R.primerContacto({ local: grande, remoto: vacio, tieneBase: true, mismoDispositivo: false }), 'normal');
+  assert.equal(R.primerContacto({ local: grande, remoto: vacio, tieneBase: false, mismoDispositivo: true }), 'normal');
+  assert.equal(R.primerContacto({ local: null, remoto: grande, tieneBase: false, mismoDispositivo: false }), 'normal');
+});

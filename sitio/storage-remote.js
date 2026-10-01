@@ -37,6 +37,14 @@
     return host === 'localhost' || /\.ts\.net$/.test(host) || /^(127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(host);
   }
 
+  /* Primer contacto de un dispositivo con el servidor (nunca habia visto su 'base'): si los dos lados
+     tienen datos y son distintos, jamas se pisa lo local a ciegas. Gana el mas grande (el que mas registros
+     acumula); si gana el servidor, el llamador guarda antes una copia de lo local. */
+  function primerContacto(o) {
+    if (o.tieneBase || o.mismoDispositivo || o.local == null || o.remoto == null || o.local === o.remoto) return 'normal';
+    return String(o.local).length >= String(o.remoto).length ? 'local' : 'remoto-con-respaldo';
+  }
+
   /* Base de la API: '' = mismo origen (la Pi, red local, desarrollo); si no, la URL de la Pi. */
   function elegirBase(o) {
     var ov = o.override;
@@ -198,6 +206,21 @@
             return local === null ? null : { value: local };
           }
 
+          var contacto = primerContacto({ local: local, remoto: remoto.valor, tieneBase: lget(kBase(clave)) != null, mismoDispositivo: remoto.dispositivo === dispositivo });
+          if (contacto !== 'normal') {
+            // Primer contacto con datos en los dos lados: la copia local se guarda siempre antes de decidir.
+            lset(clave + '__respaldo_local', local);
+            lset(clave + '__respaldo_local_ts', String(Date.now()));
+          }
+          if (contacto === 'local') {
+            // Lo local es mas completo: sube y pasa a ser la version vigente (el servidor conserva la otra en su historial).
+            lset(kBase(clave), String(remoto.actualizado));
+            lset(kTs(clave), String(Date.now()));
+            subir(clave);
+            avisar('local-conservado', { dispositivo: remoto.dispositivo });
+            return { value: local };
+          }
+
           if (remoto.actualizado >= tsLocal) {
             // El servidor manda: refrescar la copia local.
             lset(clave, remoto.valor);
@@ -245,5 +268,5 @@
   });
   }
 
-  return { elegirBase: elegirBase, decidirSonda: decidirSonda, iniciar: iniciar };
+  return { elegirBase: elegirBase, decidirSonda: decidirSonda, primerContacto: primerContacto, iniciar: iniciar };
 });
